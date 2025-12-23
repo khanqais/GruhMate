@@ -10,7 +10,7 @@ export function SearchBar({ onSearch, isLoading, category }) {
 
   const placeholders = {
     grocery: 'e.g., bread, milk, eggs...',
-    tech: 'e.g., iPhone, laptop, headphones...'
+    tech: 'e.g., iPhone, laptop, headphones.'
   };
 
   const handleSubmit = (e) => {
