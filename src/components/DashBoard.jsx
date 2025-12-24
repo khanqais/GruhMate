@@ -10,7 +10,10 @@ const Dashboard = () => {
   const { currentUser } = useAuth();
   const { logout } = useAuth();
   const navigate = useNavigate();
-  const location = useLocation(); //muje nhi pata gpt ne add kiya hai(by anshu)
+  const location = useLocation(); 
+  // const [stocks, setStocks] = useState([]);
+const [buyList, setBuyList] = useState([]);
+
 
   //  REAL STOCK DATA
   const [stocks, setStocks] = useState([]);
@@ -80,13 +83,9 @@ const Dashboard = () => {
     navigate("/", { replace: true });
   };
 
-// import { useNavigate } from "react-router-dom";
-
-// inside Dashboard component
-// const navigate = useNavigate();
-
-const handleDecrease = async (id) => {
+const handleDecrease = async (id,name) => {
   try {
+     const confirmDelete = window.confirm(`Are you sure you want to delete "${name}" from BuyList?`);
     const res = await axios.patch(
       `http://localhost:5000/api/stock/${id}/decrement`,
       {},
@@ -101,7 +100,6 @@ const handleDecrease = async (id) => {
       )
     );
 
-    // ✅ If item added to BuyList → navigate to BuyList page
     if (res.data.buyItem) {
       alert(res.data.message);
       navigate("/buylist"); // redirect to BuyList.jsx
@@ -110,52 +108,41 @@ const handleDecrease = async (id) => {
     console.error("Decrease error:", err);
   }
 };
-
 // const handleDecrease = async (id) => {
 //   try {
+//     console.log("aayi handleDecrease mein")
 //     const res = await axios.patch(
 //       `http://localhost:5000/api/stock/${id}/decrement`,
 //       {},
-//       {
-//         headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
-//       }
+//       { headers: { Authorization: `Bearer ${localStorage.getItem("token")}` } }
 //     );
+//     console.log(res)
 
 //     const updatedStock = res.data.stock;
 
-//     setStocks((prev) =>
-//       prev.map((s) =>
-//         s._id === id ? { ...s, quantity: updatedStock.quantity } : s
-//       )
-//     );
+//     setStocks((prev) => {
+//       if (res.data.remove) {
+//         // remove item completely
+//         return prev.filter((s) => s._id !== id);
+//       } else {
+//         // just update quantity
+//         return prev.map((s) =>
+//           s._id === id ? { ...s, quantity: updatedStock.quantity } : s
+//         );
+//       }
+//     });
 
-//     if (updatedStock.quantity === 0) {
-//       alert(`⚠️ Stock for ${updatedStock.name} has reached ZERO!`);
+//     if (res.data.buyItem) {
+//       // add to buyList state
+//       setBuyList((prev) => [...prev, res.data.buyItem]);
+//       alert(res.data.message);
 //     }
 //   } catch (err) {
 //     console.error("Decrease error:", err);
 //   }
 // };
 
-//anshu yaha tune mistake ki thi
 
-// const handleIncrease = async (id, currentQuantity) => {
-//   try {
-//     const res = await axios.put(
-//       `http://localhost:5000/api/stock/${id}/increment`,
-//       { quantity: currentQuantity + 1 },   // ✅ increment by 1
-//       {
-//         headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
-//       }
-//     );
-//     // Update local state
-//     setStocks((prev) =>
-//       prev.map((s) => (s._id === id ? { ...s, quantity: res.data.quantity } : s))
-//     );
-//   } catch (err) {
-//     console.error("Increase error:", err);
-//   }
-// };
 const handleIncrease = async (id) => {
   try {
     const res = await axios.patch(
@@ -202,6 +189,9 @@ const handleIncrease = async (id) => {
               </Link>
               <Link to="/stockform" className="text-gray-700 hover:text-blue-600 font-medium">
                 Stock Form
+              </Link>
+                <Link to="/buylist" className="text-gray-700 hover:text-blue-600 font-medium">
+                BuyList
               </Link>
             </nav>
 
@@ -325,7 +315,10 @@ const handleIncrease = async (id) => {
                         </td>
                        
                          <td className="py-3 px-6">
-          <button onClick={() => handleDecrease(item._id,item.quantity)}
+          <button 
+          // onClick={() => handleDecrease(item._id,item.quantity)}
+          onClick={() => handleDecrease(item._id,item.name)}
+
             className="px-3 py-1 bg-red-500 text-white rounded hover:bg-red-600"
           >
             Delete
@@ -353,6 +346,36 @@ const handleIncrease = async (id) => {
            
           </div>
         </div>
+        <div>
+  {/* Stock Table */}
+ 
+
+  {/* BuyList Section */}
+  {buyList.length > 0 && (
+    <div style={{ marginTop: "2rem" }}>
+      <h3>🛒 BuyList</h3>
+      <table>
+        <thead>
+          <tr>
+            <th>Item Name</th>
+            <th>Unit</th>
+            <th>Brand</th>
+          </tr>
+        </thead>
+        <tbody>
+          {buyList.map((item) => (
+            <tr key={item._id}>
+              <td>{item.itemName}</td>
+              <td>{item.unit}</td>
+              <td>{item.brand}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  )}
+</div>
+
       </main>
 
       <Footer />

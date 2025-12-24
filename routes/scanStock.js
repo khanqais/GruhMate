@@ -18,7 +18,8 @@ const savedItems = await Promise.all(
           { teamId: teamId, name: item.item }, // Search criteria
           { 
             $inc: { quantity: item.quantity }, // Increment quantity
-            $set: { unit: item.unit || "pcs" } // Update unit if provided
+            $set: { unit: item.unit || "pcs" }, // Update unit if provided
+            $setOnInsert: { teamId: teamId}
           },
           { upsert: true, new: true } // Create if doesn't exist
         );

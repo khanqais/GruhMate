@@ -1,92 +1,3 @@
-// import express from 'express';
-// import { addStock, getStockByTeam } from "../controller/stockController.js"
-
-// const router = express.Router();
-// import Stock from "../models/Stock.js";
-
-// // Add new stock
-// router.post('/', addStock);
-
-// // Get stock by team
-// router.get('/team/:teamId', getStockByTeam);
-
-// // Delete stock by ID
-// // import express from 'express';
-// // import { addStock, getStockByTeam } from "../controller/stockController.js";
-// // import Stock from "../models/Stock.js";
-
-// // const router = express.Router();
-
-// // // Add new stock
-// // router.post('/', addStock);
-
-// // // Get stock by team
-// // router.get('/team/:teamId', getStockByTeam);
-
-// // Decrement stock quantity by 1
-// router.patch("/:id/decrement", async (req, res) => {
-//   try {
-//     const { id } = req.params;
-//     const stock = await Stock.findById(id);
-
-//     if (!stock) {
-//       return res.status(404).json({ message: "Stock not found" });
-//     }
-
-//     if (stock.quantity > 0) {
-//       stock.quantity -= 1;
-//       await stock.save();
-//     }
-
-//     if (stock.quantity === 0) {
-//       return res.json({ message: `⚠️ Stock for ${stock.name} has reached ZERO!`, stock });
-//     }
-
-//     res.json({ message: "Stock quantity decreased by 1", stock });
-//   } catch (err) {
-//     res.status(500).json({ message: err.message });
-//   }
-// });
-
-// // Update stock quantity directly
-// router.put("/:id", async (req, res) => {
-//   try {
-//     const { id } = req.params;
-//     const { quantity } = req.body;
-
-//     const updatedStock = await Stock.findByIdAndUpdate(
-//       id,
-//       { quantity },
-//       { new: true }
-//     );
-
-//     if (!updatedStock) {
-//       return res.status(404).json({ message: "Stock not found" });
-//     }
-
-//     res.json(updatedStock);
-//   } catch (err) {
-//     res.status(500).json({ message: err.message });
-//   }
-// });
-
-// // // True delete (remove item completely)
-// // router.delete("/:id", async (req, res) => {
-// //   try {
-// //     const { id } = req.params;
-// //     const deleted = await Stock.findByIdAndDelete(id);
-
-// //     if (!deleted) {
-// //       return res.status(404).json({ message: "Stock not found" });
-// //     }
-
-// //     res.json({ message: "Stock deleted successfully" });
-// //   } catch (err) {
-// //     res.status(500).json({ message: err.message });
-// //   }
-// // });
-
-// export default router;
 import express from "express";
 import { addStock, getStockByTeam } from "../controller/stockController.js";
 import Stock from "../models/Stock.js";
@@ -101,6 +12,46 @@ router.post("/", addStock);
 router.get("/team/:teamId", getStockByTeam);
 
 // Decrement stock quantity by 1
+// router.patch("/:id/decrement", async (req, res) => {
+//   try {
+//     const { id } = req.params;
+//     console.log(id);
+//     const stock = await Stock.findById(id);
+//     console.log(stock)
+
+//     if (!stock) {
+//       return res.status(404).json({ message: "Stock not found" });
+//     }
+
+//     if (stock.quantity > 0) {
+//       stock.quantity -= 1;
+//       await stock.save();
+//     }
+
+//     // If quantity hits zero → add to BuyList
+//     if (stock.quantity === 0) {
+//       const buyItem = await BuyList.create({
+//         teamId: stock.teamId,
+//         itemName: stock.name,
+//         unit: stock.unit,
+//         brand: stock.brand,
+//       });
+//       // return res.json({ message: `⚠️ Stock for ${stock.name} has reached ZERO! Added to BuyList.`, stock, buyItem, remove: true, // 👈 flag for frontend }); }
+
+//       // return 
+//      return res.json({
+//         message: `⚠️ Stock for ${stock.name} has reached ZERO! Added to BuyList.`,
+//         stock,
+//         buyItem,
+//         remove:true
+//       });
+//     }
+
+//     res.json({ message: "Stock quantity decreased by 1", stock });
+//   } catch (err) {
+//     res.status(500).json({ message: err.message });
+//   }
+// });
 router.patch("/:id/decrement", async (req, res) => {
   try {
     const { id } = req.params;
@@ -110,32 +61,45 @@ router.patch("/:id/decrement", async (req, res) => {
       return res.status(404).json({ message: "Stock not found" });
     }
 
+    if (typeof stock.quantity !== "number") {
+      return res.status(400).json({ message: "Quantity must be a number" });
+    }
+
     if (stock.quantity > 0) {
       stock.quantity -= 1;
       await stock.save();
     }
 
-    // If quantity hits zero → add to BuyList
     if (stock.quantity === 0) {
+      // Defensive: ensure teamId exists
+      if (!stock.teamId) {
+        return res.status(400).json({ message: "Stock missing teamId, cannot add to BuyList" });
+      }
+
       const buyItem = await BuyList.create({
         teamId: stock.teamId,
         itemName: stock.name,
-        unit: stock.unit,
-        brand: stock.brand,
+        unit: stock.unit || "pcs",
+        brand: stock.brand || null,
       });
+      console.log(Stock.findByIdAndDelete(id));
+      await Stock.findByIdAndDelete(id);
 
-      return res.json({
+       res.json({
         message: `⚠️ Stock for ${stock.name} has reached ZERO! Added to BuyList.`,
         stock,
         buyItem,
+        remove: true,
       });
+    } else {
+      res.json({ message: "Stock quantity decreased by 1", stock, remove: false });
     }
-
-    res.json({ message: "Stock quantity decreased by 1", stock });
   } catch (err) {
-    res.status(500).json({ message: err.message });
+    console.error("Backend decrement error:", err);
+    res.status(500).json({ message: "Server error: " + err.message });
   }
 });
+
 // Increment stock quantity by 1
 router.patch("/:id/increment", async (req, res) => {
   try {
@@ -162,5 +126,23 @@ router.get("/buylist/:teamId", async (req, res) => {
     res.status(500).json({ message: err.message });
   }
 });
+
+// DELETE /api/stock/buylist/:id
+router.delete("/buylist/:id", async (req, res) => {
+  try {
+    const { id } = req.params;
+    const item = await BuyList.findByIdAndDelete(id);
+
+    if (!item) {
+      return res.status(404).json({ message: "BuyList item not found" });
+    }
+
+    res.json({ message: "Item removed from BuyList", item });
+  } catch (err) {
+    console.error("Delete BuyList error:", err);
+    res.status(500).json({ message: "Server error: " + err.message });
+  }
+});
+
 
 export default router;

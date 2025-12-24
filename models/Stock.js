@@ -30,7 +30,7 @@ const stockSchema = new mongoose.Schema(
     consumptionRate: {
       type: String,
       enum: ['daily', 'weekly', 'monthly', 'rare'],
-      required: true
+      // required: true
     },
 
     expiryDate: {
