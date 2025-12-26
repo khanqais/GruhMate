@@ -1,50 +1,3 @@
-// import { createContext, useContext, useEffect, useState } from "react";
-// import axios from "axios";
-
-// const AuthContext = createContext(null);
-
-// export const useAuth = () => useContext(AuthContext);
-
-// export const AuthProvider = ({ children }) => {
-//   const [currentUser, setCurrentUser] = useState(null);
-//   const [loading, setLoading] = useState(true);
-
-//   useEffect(() => {
-//     const user = localStorage.getItem("user");
-//     const token = localStorage.getItem("token");
-//     if (user.teamId) { localStorage.setItem("teamId", user.teamId);  }
-
-//     if (user && token) {
-//       setCurrentUser(JSON.parse(user));
-//       axios.defaults.headers.common.Authorization = `Bearer ${token}`;
-//     }
-
-//     setLoading(false);
-//   }, []);
-
-//   const login = (user, token) => {
-//     localStorage.setItem("user", JSON.stringify(user));
-//     localStorage.setItem("token", token);
-//     axios.defaults.headers.common.Authorization = `Bearer ${token}`;
-//     setCurrentUser(user);
-//   };
-
-//   const logout = () => {
-//     localStorage.clear();
-//     delete axios.defaults.headers.common.Authorization;
-//     setCurrentUser(null);
-//   };
-
-//   if (loading) return <h1>Loading App...</h1>; // 🔥 IMPORTANT
-
-//   return (
-//     <AuthContext.Provider value={{ currentUser, login, logout,isAuthenticated: !!currentUser, }}>
-//       {children}
-//     </AuthContext.Provider>
-//   );
-// };
-
-// // export default AuthProvider;
 import { createContext, useContext, useEffect, useState } from "react";
 import axios from "axios";
 
@@ -56,20 +9,46 @@ export const AuthProvider = ({ children }) => {
   const [currentUser, setCurrentUser] = useState(null);
   const [loading, setLoading] = useState(true);
 
+  // ✅ NEW: Function to refresh user data from backend
+  const refreshUserData = async (userId) => {
+    try {
+      const res = await fetch(`http://localhost:5000/api/user/${userId}`);
+      if (res.ok) {
+        const updatedUser = await res.json();
+        setCurrentUser(updatedUser);
+        localStorage.setItem("user", JSON.stringify(updatedUser));
+        
+        // Update teamId in localStorage if exists
+        if (updatedUser.team) {
+          localStorage.setItem("teamId", updatedUser.team);
+        }
+        
+        console.log("✅ User data refreshed:", updatedUser);
+      }
+    } catch (err) {
+      console.error("❌ Failed to refresh user data:", err);
+    }
+  };
+
   useEffect(() => {
-    const userStr = localStorage.getItem("user"); // string
+    const userStr = localStorage.getItem("user");
     const token = localStorage.getItem("token");
 
     if (userStr && token) {
-      const user = JSON.parse(userStr); // ✅ parse string into object
+      const user = JSON.parse(userStr);
       setCurrentUser(user);
 
       // Save teamId separately if present
-      if (user.teamId) {
-        localStorage.setItem("teamId", user.teamId);
+      if (user.team) {
+        localStorage.setItem("teamId", user.team);
       }
 
       axios.defaults.headers.common.Authorization = `Bearer ${token}`;
+      
+      // ✅ Refresh user data from backend to get latest team info
+      if (user._id) {
+        refreshUserData(user._id);
+      }
     }
 
     setLoading(false);
@@ -80,6 +59,11 @@ export const AuthProvider = ({ children }) => {
     localStorage.setItem("token", token);
     axios.defaults.headers.common.Authorization = `Bearer ${token}`;
     setCurrentUser(user);
+    
+    // ✅ Refresh user data after login
+    if (user._id) {
+      refreshUserData(user._id);
+    }
   };
 
   const logout = () => {
@@ -96,6 +80,7 @@ export const AuthProvider = ({ children }) => {
         currentUser,
         login,
         logout,
+        refreshUserData, // ✅ Expose refresh function
         isAuthenticated: !!currentUser,
       }}
     >
