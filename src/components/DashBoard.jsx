@@ -4,6 +4,8 @@ import axios from "axios";
 import { chef } from "../assets/images";
 import Footer from "./Footer";
 import { useAuth } from "../context/AuthContext";
+import RecipesPage from "./RecipesPage"
+import RecipeLauncherButton from "./RecipeLauncherButton";
 
 const Dashboard = () => { 
   const { currentUser, logout } = useAuth();
@@ -14,6 +16,7 @@ const Dashboard = () => {
   const [loading, setLoading] = useState(true);
   const [refreshKey, setRefreshKey] = useState(0);
   const [expiringItems, setExpiringItems] = useState([]);
+  const [showRecipes, setShowRecipes] = useState(false);
 
   const teamId = currentUser?.team;
 
@@ -449,10 +452,24 @@ const Dashboard = () => {
             </table>
           </div>
 
-          <div className="px-6 py-4 bg-gray-50 text-sm text-gray-600">
-            Showing {stocks.length} items
-          </div>
+            <div className="mt-6">
+        <RecipeLauncherButton onOpen={() => setShowRecipes(true)} />
+      </div>
+
+      {/* Render RecipesPage directly */}
+      {showRecipes && (
+        <div className="mt-6">
+          <RecipesPage />
+          <button className="mt-4 px-3 py-2 rounded bg-gray-200 hover:bg-gray-300" onClick={() => setShowRecipes(false)}
+          >
+            Close Recipes
+          </button>
         </div>
+      )}
+
+        </div>
+        <div></div>
+
       </main>
 
       <Footer />

@@ -12,6 +12,7 @@ import stockRoutes from "./routes/stock.js";
 import scanStockRoute from "./routes/scanStock.js";
 import groceryRoutes from "./routes/groceryRoutes.js";
 import techRoutes from "./routes/techRoutes.js";
+import recipes from "./routes/recipes.js"
 
 // Utils
 import { closeBrowser } from "./utils/browserUtils.js";
@@ -43,6 +44,7 @@ app.use("/api/stock", stockRoutes);     // Stock management routes
 app.use("/api", scanStockRoute);        // Image scanning routes
 app.use("/", groceryRoutes);            // Grocery price comparison routes
 app.use("/", techRoutes);               // Tech price comparison routes
+app.use("/recipes", recipes);
 
 // Health check endpoint
 app.get("/", (req, res) => {
