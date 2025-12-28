@@ -1,8 +1,6 @@
-// controllers/techScrapers.js
 import { getSharedBrowser, setupRequestInterception, addStealth } from '../utils/browserUtils.js';
 import { waitFor, withRetry } from '../utils/helpers.js';
 
-// Amazon scraper
 export async function scrapeAmazon(product) {
   return withRetry(async () => {
     const browser = await getSharedBrowser();

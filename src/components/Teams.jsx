@@ -12,10 +12,9 @@ const Teams = () => {
   const [message, setMessage] = useState("");
   const [myTeam, setMyTeam] = useState(null);
   const [loading, setLoading] = useState(false);
-  const [pageLoading, setPageLoading] = useState(true); // ✅ NEW: Separate loading state
+  const [pageLoading, setPageLoading] = useState(true); 
   const navigate = useNavigate();
 
-  // ✅ FIXED: Async refresh that properly updates context
   const refreshUserData = async () => {
     try {
       const res = await fetch(`http://localhost:5000/api/user/${loggedInUserId}`);
@@ -23,8 +22,8 @@ const Teams = () => {
       
       if (res.ok && userData) {
         const token = localStorage.getItem('token');
-        login(userData, token); // ✅ This updates currentUser in context
-        return userData; // ✅ Return the fresh user data
+        login(userData, token); 
+        return userData; 
       }
     } catch (err) {
       console.error("Error refreshing user data:", err);
@@ -32,7 +31,6 @@ const Teams = () => {
     }
   };
 
-  // ✅ FIXED: Fetch team data using the refreshed user
   const fetchMyTeam = async (userTeamId) => {
     try {
       if (!userTeamId) {
@@ -54,7 +52,6 @@ const Teams = () => {
     }
   };
 
-  // ✅ FIXED: Properly initialize page with fresh data
   useEffect(() => {
     const initializePage = async () => {
       if (!loggedInUserId) {
@@ -64,10 +61,8 @@ const Teams = () => {
 
       setPageLoading(true);
       
-      // 1. Refresh user data from backend
       const freshUserData = await refreshUserData();
       
-      // 2. Fetch team using the fresh data
       if (freshUserData?.team) {
         await fetchMyTeam(freshUserData.team);
       } else {
@@ -105,7 +100,6 @@ const Teams = () => {
         setMessage(`Team "${teamName}" created successfully!`);
         setTeamName("");
         
-        // ✅ Refresh user data and team info
         const freshUserData = await refreshUserData();
         if (freshUserData?.team) {
           await fetchMyTeam(freshUserData.team);
@@ -139,7 +133,6 @@ const Teams = () => {
         setMessage(data.message);
         setTeamCode("");
         
-        // ✅ Refresh after joining
         await refreshUserData();
       } else {
         setMessage(data.error || "Failed to join team");
@@ -171,7 +164,6 @@ const Teams = () => {
       if (res.ok) {
         setMessage("Team deleted successfully");
         
-        // ✅ Refresh user data and clear team
         await refreshUserData();
         setMyTeam(null);
       } else {
@@ -183,7 +175,6 @@ const Teams = () => {
     }
   };
 
-  // ✅ Show loading spinner while page initializes
   if (pageLoading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center">
@@ -202,7 +193,6 @@ const Teams = () => {
           Team Management
         </h1>
 
-        {/* My Team Section */}
         {myTeam && (
           <div className="bg-white rounded-xl shadow-lg p-6 mb-8">
             <h2 className="text-2xl font-bold text-gray-800 mb-4">My Team</h2>
@@ -243,7 +233,6 @@ const Teams = () => {
           </div>
         )}
 
-        {/* Create and Join Team - Only shown when user has no team */}
         {!myTeam && (
           <>
             <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6 text-center">
@@ -253,7 +242,6 @@ const Teams = () => {
             </div>
 
             <div className="grid md:grid-cols-2 gap-6 mb-8">
-              {/* Create Team */}
               <div className="bg-white rounded-xl shadow-lg p-6">
                 <div className="text-center mb-4">
                   <div className="text-4xl mb-2">🎯</div>
@@ -288,7 +276,6 @@ const Teams = () => {
                 )}
               </div>
 
-              {/* Join Team */}
               <div className="bg-white rounded-xl shadow-lg p-6">
                 <div className="text-center mb-4">
                   <div className="text-4xl mb-2">🤝</div>
@@ -317,14 +304,12 @@ const Teams = () => {
           </>
         )}
 
-        {/* Message Display */}
         {message && (
           <div className="bg-blue-50 border border-blue-200 text-blue-800 px-4 py-3 rounded-lg mb-6 text-center">
             {message}
           </div>
         )}
 
-        {/* Info Section */}
         <div className="bg-white rounded-xl shadow-lg p-6">
           <h3 className="text-xl font-semibold text-gray-800 mb-4">ℹ️ How it works</h3>
           <ul className="space-y-3 text-gray-700">

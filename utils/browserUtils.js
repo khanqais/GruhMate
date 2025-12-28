@@ -1,4 +1,3 @@
-// utils/browserUtils.js
 import puppeteer from 'puppeteer';
 
 let sharedBrowser = null;

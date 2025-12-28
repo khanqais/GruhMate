@@ -16,7 +16,6 @@ import { ToastContainer } from 'react-toastify'
 import 'react-toastify/dist/ReactToastify.css'
 import TeamDetail from './components/TeamDetail'
 import NutritionDashboard from './components/NutritionDashboard'
-// import PrivateRoute from './routes/PrivateRoute'
 import Profile from "./pages/Profile";
 import { StockProvider } from './context/StockContext'
 
@@ -35,12 +34,10 @@ function App() {
         />
 
         <Routes>
-          {/* <Route path="/" element={<PublicRoute><HomePage /></PublicRoute>} /> */}
 <Route path="/" element={<HomePage />} />
           <Route path="/login" element={<Login />} />
           <Route path="/signup" element={<SignUp />} />
           <Route path="/forgotpwd" element={<ForgotPassword />} />
-          {/* <Route path="/profile" element={<Profile />} /> */}
 
           <Route path="/grocery" element={<GroceryPage />} />
           <Route path="/tech" element={<TechPage />} />

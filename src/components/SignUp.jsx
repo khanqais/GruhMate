@@ -13,8 +13,8 @@ const SignUp = () => {
   });
 
   const [errors, setErrors] = useState({});
-  const [otpSent, setOtpSent] = useState(false);      // 
-  const [otpVerified, setOtpVerified] = useState(false); // 
+  const [otpSent, setOtpSent] = useState(false);
+  const [otpVerified, setOtpVerified] = useState(false);
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -22,14 +22,12 @@ const SignUp = () => {
     if (errors[name]) setErrors({ ...errors, [name]: '' });
   };
 
-  // ✅ Step 1: Send OTP
   const handleSendOtp = async () => {
     if (!formData.phone || !/^\d{10}$/.test(formData.phone)) {
       setErrors({ ...errors, phone: 'Enter valid 10-digit phone number' });
       return;
     }
     try {
-      // Call backend /api/auth/signup to trigger Twilio Verify
       const res = await fetch("http://localhost:5000/api/auth/signup", {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -51,7 +49,6 @@ const SignUp = () => {
     }
   };
 
-  // ✅ Step 2: Verify OTP
   const handleVerifyOtp = async () => {
     if (!formData.otp) {
       setErrors({ ...errors, otp: 'Enter OTP' });
@@ -75,7 +72,6 @@ const SignUp = () => {
     }
   };
 
-  // ✅ Step 3: Final account creation (after OTP verified)
   const handleCreateAccount = () => {
     alert('Account created successfully! You can now login.');
     navigate('/login');
@@ -84,8 +80,6 @@ const SignUp = () => {
   return (
     <div className="min-h-screen flex justify-center items-center bg-linear-to-br from-blue-50 to-blue-400 py-8">
       <div className="flex w-full max-w-3xl bg-white rounded-2xl shadow-2xl overflow-hidden">
-        
-        {/* Left side */}
         <div className="hidden md:flex md:w-1/2 bg-blue-50 items-center justify-center p-6 animate-slideInLeft">
           <div className="text-center">
             <div className="w-48 h-48 bg-white rounded-full flex items-center justify-center shadow-lg mx-auto mb-4">
@@ -96,7 +90,6 @@ const SignUp = () => {
           </div>
         </div>
 
-        {/* Right side */}
         <div className="w-full md:w-1/2 p-6 md:p-8 animate-slideInRight">
           <form className="space-y-4">
             <div className="text-center mb-4">
@@ -104,7 +97,6 @@ const SignUp = () => {
               <p className="text-gray-600 text-sm mt-1">Sign up to manage your kitchen inventory</p>
             </div>
 
-            {/* Name */}
             <input
               type="text"
               name="name"
@@ -115,7 +107,6 @@ const SignUp = () => {
             />
             {errors.name && <p className="text-red-500 text-xs">{errors.name}</p>}
 
-            {/* Phone */}
             <input
               type="text"
               name="phone"
@@ -126,7 +117,6 @@ const SignUp = () => {
             />
             {errors.phone && <p className="text-red-500 text-xs">{errors.phone}</p>}
 
-            {/* Password */}
             <input
               type="password"
               name="password"
@@ -137,7 +127,6 @@ const SignUp = () => {
             />
             {errors.password && <p className="text-red-500 text-xs">{errors.password}</p>}
 
-            {/* Confirm Password */}
             <input
               type="password"
               name="confirmPassword"
@@ -148,7 +137,6 @@ const SignUp = () => {
             />
             {errors.confirmPassword && <p className="text-red-500 text-xs">{errors.confirmPassword}</p>}
 
-            {/* Step 1: Send OTP */}
             {!otpSent && (
               <button
                 type="button"
@@ -159,7 +147,6 @@ const SignUp = () => {
               </button>
             )}
 
-            {/* Step 2: Enter OTP + Verify */}
             {otpSent && !otpVerified && (
               <>
                 <input
@@ -181,7 +168,6 @@ const SignUp = () => {
               </>
             )}
 
-            {/* Step 3: Final Create Account */}
             {otpVerified && (
               <button
                 type="button"
@@ -203,4 +189,3 @@ const SignUp = () => {
 };
 
 export default SignUp;
-

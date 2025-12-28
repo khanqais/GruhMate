@@ -9,17 +9,15 @@ export default function Profile() {
   useEffect(() => {
     const fetchTeam = async () => {
       try {
-        // 🔥 USE TEAM ID, NOT USER ID
         if (!currentUser?.team) return;
 
         const res = await axios.get(
           `http://localhost:5000/api/team/${currentUser.team}`
         );
 
-        // members come inside res.data.team
         setTeamMembers(res.data.team.members);
       } catch (err) {
-        console.error("❌ Fetch team error:", err);
+        console.error(" Fetch team error:", err);
       }
     };
 
@@ -30,14 +28,12 @@ export default function Profile() {
     <div className="max-w-4xl mx-auto mt-10 bg-white p-6 rounded-xl shadow">
       <h2 className="text-2xl font-bold mb-4">My Profile</h2>
 
-      {/* USER INFO */}
       <div className="mb-6">
         <p><strong>Name:</strong> {currentUser?.name}</p>
         <p><strong>Email:</strong> {currentUser?.email}</p>
         <p><strong>Phone:</strong> {currentUser?.phone}</p>
       </div>
 
-      {/* TEAM MEMBERS */}
       <h3 className="text-xl font-semibold mb-2">Team Members</h3>
 
       <ul className="list-disc pl-6">

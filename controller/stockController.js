@@ -1,8 +1,7 @@
 import Stock from '../models/Stock.js';
-import BuyList from '../models/BuyList.js'; // ✅ Add this
+import BuyList from '../models/BuyList.js';
 import { notifyTeam } from '../services/teamNotifier.js';
 
-/* ================= ADD STOCK ================= */
 export const addStock = async (req, res) => {
   try {
     const {
@@ -13,7 +12,7 @@ export const addStock = async (req, res) => {
       consumptionRate,
       expiryDate,
       brand,
-      userName // ✅ Add this
+      userName
     } = req.body;
     console.log(req.body);
 
@@ -27,7 +26,6 @@ export const addStock = async (req, res) => {
       brand
     });
 
-    // ✅ Enhanced notification with user name
     await notifyTeam(
       teamId,
       `✅ NEW STOCK ADDED!\n📦 Item: ${name}\n📊 Quantity: ${quantity} ${unit}\n🏷️ Brand: ${brand || 'N/A'}\n👤 Added by: ${userName || 'Team member'}`
@@ -39,7 +37,6 @@ export const addStock = async (req, res) => {
   }
 };
 
-/* ================= GET STOCK BY TEAM ================= */
 export const getStockByTeam = async (req, res) => {
   try {
     const { teamId } = req.params;
@@ -55,7 +52,6 @@ export const getStockByTeam = async (req, res) => {
   }
 };
 
-/* ================= UPDATE STOCK (Optional - if you want) ================= */
 export const updateStock = async (req, res) => {
   try {
     const { id } = req.params;
@@ -78,7 +74,6 @@ export const updateStock = async (req, res) => {
   }
 };
 
-/* ================= DELETE STOCK ================= */
 export const deleteStock = async (req, res) => {
   try {
     const { id } = req.params;
@@ -94,7 +89,6 @@ export const deleteStock = async (req, res) => {
 
     await Stock.findByIdAndDelete(id);
 
-    // ✅ Send notification
     try {
       await notifyTeam(
         teamId,

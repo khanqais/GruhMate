@@ -8,8 +8,7 @@ import { useAuth } from "../context/AuthContext";
 const StockForm = () => {
   const navigate = useNavigate();
   const { currentUser } = useAuth();
-  
-  // ✅ FIXED: Use currentUser.team, not teamId
+
   const teamId = currentUser?.team;
 
   const [formData, setFormData] = useState({
@@ -26,11 +25,9 @@ const StockForm = () => {
   const [showCalendar, setShowCalendar] = useState(false);
   const calendarRef = useRef(null);
 
-  /* ================= OPTIONS ================= */
   const consumptionRateOptions = ["daily", "weekly", "monthly", "rare"];
   const unitOptions = ["kg", "g", "litre", "ml", "piece", "packet", "bottle"];
 
-  /* ================= CALENDAR ================= */
   const [currentDate, setCurrentDate] = useState(new Date());
   const [selectedDate, setSelectedDate] = useState(null);
 
@@ -46,7 +43,6 @@ const StockForm = () => {
     setShowCalendar(false);
   };
 
-  /* ================= HANDLERS ================= */
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
     setErrors({ ...errors, [e.target.name]: "" });
@@ -70,14 +66,12 @@ const StockForm = () => {
     }
 
     try {
-      // ✅ Check if teamId exists
       if (!teamId) {
         alert("Team not found. Please create or join a team first.");
         navigate("/teams");
         return;
       }
 
-      // 👉 NOTE LOGIC (bananas 2–3 days)
       let note = "";
       if (formData.expiryDate) {
         const today = new Date();
@@ -92,7 +86,6 @@ const StockForm = () => {
         userName: currentUser?.name,
       });
 
-      // ✅ FIXED: Added userName for notifications
       await axios.post(
         "http://localhost:5000/api/stock",
         {
@@ -103,7 +96,7 @@ const StockForm = () => {
           expiryDate: formData.expiryDate || null,
           brand: formData.brand,
           teamId: teamId,
-          userName: currentUser?.name, // ✅ For WhatsApp notifications
+          userName: currentUser?.name,
         },
         {
           headers: {
@@ -122,24 +115,12 @@ const StockForm = () => {
     }
   };
 
-  /* ================= JSX ================= */
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* <header className="bg-white shadow p-4 flex justify-between">
-        <div className="flex items-center gap-2">
-          <img src={chef} alt="logo" className="w-8 h-8" />
-          <span className="font-bold text-xl">GruhMate</span>
-        </div>
-        <Link to="/dashboard" className="bg-blue-600 text-white px-4 py-2 rounded">
-          Dashboard
-        </Link>
-      </header> */}
-
       <main className="max-w-2xl mx-auto p-6">
         <h1 className="text-3xl font-bold mb-6">Add Stock Item</h1>
 
         <form onSubmit={handleSubmit} className="bg-white p-6 rounded shadow space-y-5">
-          {/* Item Name */}
           <div>
             <input
               name="name"
@@ -151,7 +132,6 @@ const StockForm = () => {
             {errors.name && <p className="text-red-500 text-sm mt-1">{errors.name}</p>}
           </div>
 
-          {/* Available Quantity */}
           <div>
             <input
               type="number"
@@ -166,7 +146,6 @@ const StockForm = () => {
             {errors.quantity && <p className="text-red-500 text-sm mt-1">{errors.quantity}</p>}
           </div>
 
-          {/* Required Quantity */}
           <div>
             <input
               type="number"
@@ -183,7 +162,6 @@ const StockForm = () => {
             )}
           </div>
 
-          {/* Unit */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">Unit</label>
             <select
@@ -200,8 +178,6 @@ const StockForm = () => {
             </select>
           </div>
 
-          {/* ✅ FIXED: Removed duplicate consumptionRate select */}
-          {/* Consumption Rate */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
               Consumption Rate
@@ -224,7 +200,6 @@ const StockForm = () => {
             )}
           </div>
 
-          {/* Brand (Optional) */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
               Brand (Optional)
@@ -238,7 +213,6 @@ const StockForm = () => {
             />
           </div>
 
-          {/* Expiry Date */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
               Expiry Date (Optional)
@@ -255,7 +229,6 @@ const StockForm = () => {
             </p>
           </div>
 
-          {/* Submit Button */}
           <button
             type="submit"
             className="w-full bg-blue-600 text-white py-3 rounded font-semibold hover:bg-blue-700 transition"

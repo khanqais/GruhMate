@@ -6,12 +6,7 @@ export default function RecipeDrawer({ open, onClose }) {
   const { currentUser } = useAuth();
   const { stocks } = useStock();
 
-  // ✅ SAFELY DERIVE teamId
-  // const teamId =
-  //   currentUser?.teamId ||
-  //   currentUser?.team?._id ||
-  //   currentUser?._id ||
-  //   null;
+ 
 const teamId = currentUser?.team || null;
 
   const [goals, setGoals] = useState("");
@@ -23,7 +18,7 @@ const teamId = currentUser?.team || null;
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
-  // 🔥 AUTO-FILL focus items from stock
+  
   useEffect(() => {
     if (!stocks || stocks.length === 0) {
       setFocusItems("");

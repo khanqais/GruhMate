@@ -11,7 +11,6 @@ const stockSchema = new mongoose.Schema({
   brand: { type: String },
   teamId: { type: mongoose.Schema.Types.ObjectId, ref: "Team", required: true },
   
-  // ✅ ADD THESE TWO FIELDS (for smart expiry notifications)
   lastExpiryNotification: { 
     type: String, 
     enum: ['30days', '1day', 'expired', null],

@@ -7,7 +7,7 @@ import { useAuth } from "../context/AuthContext";
 
 const BuyList = () => {
   const { currentUser } = useAuth();
-  const teamId = currentUser?.team; // ✅ FIXED: Use .team instead of .teamId
+  const teamId = currentUser?.team; 
 
   const [buyList, setBuyList] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -18,7 +18,6 @@ const BuyList = () => {
   const navigate = useNavigate();
   const location = useLocation();
 
-  // Fetch BuyList from backend
   const fetchBuyList = async () => {
     try {
       setLoading(true);
@@ -44,7 +43,6 @@ const BuyList = () => {
     }
   };
 
-  // ✅ FIXED: Added userName to delete request
   const handleDelete = async (id, itemName) => {
     try {
       const confirmDelete = window.confirm(
@@ -54,10 +52,9 @@ const BuyList = () => {
 
       await axios.delete(`http://localhost:5000/api/stock/buylist/${id}`, {
         headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
-        data: { userName: currentUser?.name }, // ✅ FIXED: Added userName for notifications
+        data: { userName: currentUser?.name }, 
       });
 
-      // Update state
       setBuyList((prev) => prev.filter((item) => item._id !== id));
 
       alert(`"${itemName}" has been deleted from BuyList.`);
@@ -136,18 +133,7 @@ const BuyList = () => {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* Header */}
-      {/* <header className="bg-white shadow p-4 flex justify-between">
-        <div className="flex items-center gap-2">
-          <img src={chef} alt="logo" className="w-8 h-8" />
-          <span className="font-bold text-xl">GruhMate</span>
-        </div>
-        <Link to="/dashboard" className="bg-blue-600 text-white px-4 py-2 rounded">
-          Dashboard
-        </Link>
-      </header> */}
-
-      {/* Main */}
+      
       <main className="max-w-4xl mx-auto p-6">
         <h1 className="text-3xl font-bold mb-6">Buy List</h1>
 
@@ -205,7 +191,6 @@ const BuyList = () => {
           </div>
         </div>
 
-        {/* Image Upload Section */}
         <div className="mt-6 bg-white p-6 rounded-xl shadow-sm border">
           <h3 className="font-bold text-lg mb-4">📷 Add Stock via Image</h3>
 
@@ -245,7 +230,6 @@ const BuyList = () => {
           )}
         </div>
 
-        {/* Detected Items */}
         {detectedItems.length > 0 && (
           <div className="mt-6 bg-white p-6 rounded-xl shadow-sm border-2 border-blue-200">
             <h3 className="font-bold mb-4 text-lg">✅ Verify Detected Items</h3>

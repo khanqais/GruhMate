@@ -58,7 +58,6 @@ const TeamDetail = () => {
       setMessage("Server error");
     }
   };
-  // Add this function with your other handlers
 const handleDeleteTeam = async () => {
   if (!window.confirm(`Are you sure you want to DELETE the entire team "${team.name}"? This action cannot be undone and will remove all members.`)) {
     return;
@@ -76,11 +75,9 @@ const handleDeleteTeam = async () => {
     if (res.ok) {
       setMessage("Team deleted successfully");
       
-      // Update localStorage to remove team from currentUser
       const updatedUser = { ...currentUser, team: null };
       localStorage.setItem('user', JSON.stringify(updatedUser));
       
-      // Redirect to teams page after 1.5 seconds
       setTimeout(() => navigate("/teams"), 1500);
     } else {
       setMessage(data.error || "Failed to delete team");
@@ -178,7 +175,6 @@ const handleDeleteTeam = async () => {
     );
   }
 
-  // ✅ Add additional check for admin
   if (!team.admin) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -193,13 +189,11 @@ const handleDeleteTeam = async () => {
   return (
     <div className="min-h-screen bg-gradient-to-from-purple-50 to-pink-100 p-6">
       <div className="max-w-5xl mx-auto">
-        {/* Header */}
         <div className="bg-white rounded-xl shadow-lg p-8 mb-6">
           <div className="flex items-center justify-between mb-4">
             <div className="flex-1">
               <h1 className="text-3xl font-bold text-gray-800 mb-2">{team.name}</h1>
               
-              {/* ✅ Team Code - Only visible to Admin */}
               {isAdmin && (
                 <div className="bg-gradient-to-from-indigo-50 to-purple-50 border-2 border-indigo-200 rounded-lg p-4 mt-3 max-w-md">
                   <p className="text-sm text-gray-600 mb-2 font-semibold">
@@ -234,7 +228,6 @@ const handleDeleteTeam = async () => {
       <span className="bg-yellow-100 text-yellow-800 px-4 py-2 rounded-full font-semibold h-fit">
         👑 Admin
       </span>
-      {/* ✅ DELETE TEAM BUTTON - Only for Admin */}
       <button
         onClick={handleDeleteTeam}
         className="bg-red-600 text-white px-6 py-2 rounded-lg hover:bg-red-700 transition h-fit font-semibold flex items-center gap-2"
@@ -256,7 +249,6 @@ const handleDeleteTeam = async () => {
           </div>
 
           <div className="flex items-center gap-4 text-sm text-gray-600 mt-4">
-            {/* ✅ Fixed line 207 with optional chaining */}
             <span>👤 Admin: <strong>{team.admin?.name || 'Unknown'}</strong></span>
             <span>👥 <strong>{team.members?.length || 0}</strong> Member{team.members?.length !== 1 ? 's' : ''}</span>
             {team.createdAt && (
@@ -265,7 +257,6 @@ const handleDeleteTeam = async () => {
           </div>
         </div>
 
-        {/* Message */}
         {message && (
           <div className="bg-blue-50 border border-blue-200 text-blue-800 px-4 py-3 rounded-lg mb-6 flex items-center gap-2">
             <span>ℹ️</span>
@@ -273,7 +264,6 @@ const handleDeleteTeam = async () => {
           </div>
         )}
 
-        {/* Tabs */}
         <div className="bg-white rounded-xl shadow-lg overflow-hidden">
           <div className="flex border-b">
             <button
@@ -306,7 +296,6 @@ const handleDeleteTeam = async () => {
           </div>
 
           <div className="p-6">
-            {/* Members Tab */}
             {activeTab === "members" && (
               <div className="space-y-4">
                 {!team.members || team.members.length === 0 ? (
@@ -347,7 +336,6 @@ const handleDeleteTeam = async () => {
               </div>
             )}
 
-            {/* Pending Requests Tab */}
             {activeTab === "requests" && isAdmin && (
               <div className="space-y-4">
                 {pendingRequests.length === 0 ? (
@@ -373,7 +361,7 @@ const handleDeleteTeam = async () => {
                             {request.userId?.name || 'Unknown'}
                           </h3>
                           <p className="text-sm text-gray-600">
-                            📞 {request.userId?.phone || 'N/A'}
+                            {request.userId?.phone || 'N/A'}
                           </p>
                           {request.createdAt && (
                             <p className="text-xs text-gray-500 mt-1">

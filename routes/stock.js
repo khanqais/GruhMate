@@ -6,13 +6,10 @@ import { notifyTeam } from "../services/teamNotifier.js";
 
 const router = express.Router();
 
-// Add new stock (uses controller)
 router.post("/", addStock);
 
-// Get stock by team
 router.get("/team/:teamId", getStockByTeam);
 
-// ✅ FIXED: Update stock (handles expiry and consumption rate)
 router.put("/:id", async (req, res) => {
   try {
     const { id } = req.params;
@@ -36,27 +33,24 @@ router.put("/:id", async (req, res) => {
       return res.status(404).json({ error: "Stock item not found" });
     }
 
-    // ✅ Send notification
     try {
       await notifyTeam(
         updated.teamId,
-        `📝 STOCK UPDATED\n📦 ${updated.name}\n${expiryDate ? `⏰ Expiry: ${new Date(expiryDate).toLocaleDateString()}\n` : ''}${consumptionRate ? `📊 Consumption: ${consumptionRate}\n` : ''}👤 By: ${userName || 'Team member'}`
+        `STOCK UPDATED\nItem: ${updated.name}\n${expiryDate ? `Expiry: ${new Date(expiryDate).toLocaleDateString()}\n` : ''}${consumptionRate ? `Consumption: ${consumptionRate}\n` : ''}By: ${userName || 'Team member'}`
       );
     } catch (notifyError) {
-      console.error("⚠️ Notification failed:", notifyError.message);
+      console.error("Notification failed:", notifyError.message);
     }
 
-    res.json(updated); // ✅ Return updated stock directly
+    res.json(updated);
   } catch (err) {
     console.error("Error updating stock:", err);
     res.status(500).json({ error: "Server error" });
   }
 });
 
-// ✅ Delete stock (uses controller)
 router.delete("/:id", deleteStock);
 
-// Decrement stock
 router.patch("/:id/decrement", async (req, res) => {
   try {
     const stock = await Stock.findById(req.params.id);
@@ -80,10 +74,10 @@ router.patch("/:id/decrement", async (req, res) => {
     try {
       await notifyTeam(
         stock.teamId,
-        `➖ STOCK DECREASED\n📦 ${stock.name}\n📊 Remaining: ${stock.quantity} ${stock.unit}\n👤 By: ${userName}`
+        `STOCK DECREASED\nItem: ${stock.name}\nRemaining: ${stock.quantity} ${stock.unit}\nBy: ${userName}`
       );
     } catch (notifyError) {
-      console.error("⚠️ Notification failed:", notifyError.message);
+      console.error("Notification failed:", notifyError.message);
     }
 
     if (stock.quantity === 0) {
@@ -97,10 +91,10 @@ router.patch("/:id/decrement", async (req, res) => {
       try {
         await notifyTeam(
           stock.teamId,
-          `⚠️ STOCK FINISHED!\n📦 ${stock.name} is out of stock\n🛒 Added to BuyList\n👤 By: ${userName}`
+          `STOCK FINISHED\nItem: ${stock.name} is out of stock\nAdded to BuyList\nBy: ${userName}`
         );
       } catch (notifyError) {
-        console.error("⚠️ Notification failed:", notifyError.message);
+        console.error("Notification failed:", notifyError.message);
       }
 
       await Stock.findByIdAndDelete(stock._id);
@@ -113,12 +107,11 @@ router.patch("/:id/decrement", async (req, res) => {
 
     res.json({ stock, remove: false });
   } catch (err) {
-    console.error("❌ Decrement error:", err);
+    console.error("Decrement error:", err);
     res.status(500).json({ message: err.message });
   }
 });
 
-// Increment stock
 router.patch("/:id/increment", async (req, res) => {
   try {
     const stock = await Stock.findByIdAndUpdate(
@@ -136,20 +129,19 @@ router.patch("/:id/increment", async (req, res) => {
     try {
       await notifyTeam(
         stock.teamId,
-        `➕ STOCK INCREASED\n📦 ${stock.name}\n📊 Now: ${stock.quantity} ${stock.unit}\n👤 By: ${userName}`
+        `STOCK INCREASED\nItem: ${stock.name}\nNow: ${stock.quantity} ${stock.unit}\nBy: ${userName}`
       );
     } catch (notifyError) {
-      console.error("⚠️ Notification failed (but stock was updated):", notifyError.message);
+      console.error("Notification failed (but stock was updated):", notifyError.message);
     }
 
     res.json({ stock });
   } catch (err) {
-    console.error("❌ Increment error:", err);
+    console.error("Increment error:", err);
     res.status(500).json({ message: err.message });
   }
 });
 
-// Get BuyList for a team
 router.get("/buylist/:teamId", async (req, res) => {
   try {
     const { teamId } = req.params;
@@ -160,7 +152,6 @@ router.get("/buylist/:teamId", async (req, res) => {
   }
 });
 
-// Add to BuyList manually
 router.post("/buylist", async (req, res) => {
   try {
     const { teamId, itemName, unit, brand, userName } = req.body;
@@ -175,10 +166,10 @@ router.post("/buylist", async (req, res) => {
     try {
       await notifyTeam(
         teamId,
-        `🛒 NEW ITEM ADDED TO BUYLIST\n📦 ${itemName}\n👤 By: ${userName || 'Team member'}`
+        `NEW ITEM ADDED TO BUYLIST\nItem: ${itemName}\nBy: ${userName || 'Team member'}`
       );
     } catch (notifyError) {
-      console.error("⚠️ Notification failed:", notifyError.message);
+      console.error("Notification failed:", notifyError.message);
     }
 
     res.json({ message: "Item added to BuyList", buyItem });
@@ -187,7 +178,6 @@ router.post("/buylist", async (req, res) => {
   }
 });
 
-// DELETE from BuyList
 router.delete("/buylist/:id", async (req, res) => {
   try {
     const { id } = req.params;
@@ -206,10 +196,10 @@ router.delete("/buylist/:id", async (req, res) => {
     try {
       await notifyTeam(
         teamId,
-        `✅ REMOVED FROM BUYLIST\n🛒 ${itemName}\n👤 By: ${userName}`
+        `REMOVED FROM BUYLIST\nItem: ${itemName}\nBy: ${userName}`
       );
     } catch (notifyError) {
-      console.error("⚠️ Notification failed:", notifyError.message);
+      console.error("Notification failed:", notifyError.message);
     }
 
     res.json({ message: "Item removed from BuyList", item });

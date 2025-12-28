@@ -7,8 +7,6 @@ const buyListSchema = new mongoose.Schema({
     required: true,
   },
   itemName: { type: String, required: true },
-//   unit: { type: String },
-//   brand: { type: String },
   createdAt: { type: Date, default: Date.now },
 });
 

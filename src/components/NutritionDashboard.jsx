@@ -17,10 +17,10 @@ import {
 import "./NutritionDashboard.css";
 
 const COLORS = [
-  "#10b981", // Emerald - Fiber
-  "#3b82f6", // Blue - Protein
-  "#f59e0b", // Amber - Vitamins
-  "#ef4444", // Red - Processed
+  "#10b981", 
+  "#3b82f6", 
+  "#f59e0b", 
+  "#ef4444", 
 ];
 
 const confidenceColors = {

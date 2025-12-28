@@ -1,8 +1,6 @@
-// routes/auth.js
 console.log("loaded auth route")
 import express from "express";
 import jwt from "jsonwebtoken";
-// import User from "../models/user.js";
 import User from "../models/user.js";
 import twilio from "twilio";
 import dotenv from "dotenv";
@@ -10,7 +8,6 @@ dotenv.config();
 
 const router = express.Router();
 
-// Twilio client
 const client = twilio(process.env.TWILIO_SID, process.env.TWILIO_AUTH_TOKEN);
 console.log("Twilio SID:", process.env.TWILIO_SID);
 console.log("Twilio Auth Token:", process.env.TWILIO_AUTH_TOKEN);
@@ -34,7 +31,6 @@ console.log("signup ",req.body);
     const user = new User({ name, phone: formattedPhone, password, verified: false });
     await user.save();
 
-    // Start Twilio Verify (send OTP)
     await client.verify.v2
       .services(process.env.TWILIO_VERIFY_SERVICE_SID)
       .verifications.create({ to: formattedPhone, channel: "sms" });
@@ -51,7 +47,6 @@ router.post("/verify-otp", async (req, res) => {
     console.log("verifyOtp ",req.body);
     const formattedPhone = `+91${phone}`;
 
-    // Check OTP
     const result = await client.verify.v2
       .services(process.env.TWILIO_VERIFY_SERVICE_SID)
       .verificationChecks.create({ to: formattedPhone, code });
@@ -76,7 +71,6 @@ router.post("/verify-otp", async (req, res) => {
 router.post("/login", async (req, res) => {
   console.log("in login route")
  
-// const user = await User.findOne({ phone: formattedPhone });
 
   try {
     const { phone, password } = req.body;
@@ -96,7 +90,6 @@ router.post("/login", async (req, res) => {
 
     const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, { expiresIn: "1h" });
 
-    // Include user object in response
     res.json({
       message: "Login successful in auth route backend",
       token,
@@ -117,7 +110,6 @@ router.post("/forgot-password", async (req, res) => {
   try {
     const { phone } = req.body;
 
-    // Phone should already be formatted as +91XXXXXXXXXX from frontend
     const user = await User.findOne({ phone });
     if (!user) return res.status(400).json({ message: "User not found with this phone number" });
 
@@ -148,7 +140,7 @@ router.post("/reset-password", async (req, res) => {
     if (!user) return res.status(400).json({ message: "User not found" });
 
     user.password = newPassword;
-    await user.save(); // Pre-save hook will hash the password
+    await user.save();
 
     res.json({ message: "Password reset successful" });
   } catch (err) {

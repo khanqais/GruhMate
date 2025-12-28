@@ -1,4 +1,3 @@
-// RecipeLauncherButton.jsx
 import { SparklesIcon } from '@heroicons/react/24/outline';
 
 export default function RecipeLauncherButton({ onOpen }) {

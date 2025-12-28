@@ -1,8 +1,8 @@
-// controllers/groceryScrapers.js
+
 import { getSharedBrowser, setupRequestInterception, addStealth } from '../utils/browserUtils.js';
 import { waitFor, withRetry } from '../utils/helpers.js';
 
-// Optimized configuration for fast scraping
+
 const SCRAPER_CONFIG = {
   viewport: { width: 1280, height: 800 },
   userAgent:
@@ -20,7 +20,7 @@ export async function scrapeZepto(product, location) {
     try {
       await page.setRequestInterception(true);
 
-      // Optimized request interception - block unnecessary resources but keep images
+      
       page.on('request', (req) => {
         const resourceType = req.resourceType();
         if (['font', 'media', 'video'].includes(resourceType)) {
@@ -43,13 +43,13 @@ export async function scrapeZepto(product, location) {
 
       await waitFor(SCRAPER_CONFIG.waitAfterLoad);
 
-      // Scroll to trigger lazy loading
+     
       await page.evaluate(() => {
         window.scrollTo(0, 800);
       });
       await waitFor(800);
 
-      // Try multiple selector strategies
+     
       const selectors = [
         'a[href*="/pn/"]',
         'a[href*="/prn/"]',
@@ -93,7 +93,7 @@ export async function scrapeZepto(product, location) {
           const text = card.innerText || '';
           if (text.length < 5) continue;
 
-          // Extract name
+         
           let name = '';
           const nameEl =
             card.querySelector('[data-testid="product-card-name"]') ||
@@ -124,7 +124,7 @@ export async function scrapeZepto(product, location) {
           if (!name || name.length < 3 || seenNames.has(name)) continue;
           seenNames.add(name);
 
-          // Extract price
+          
           let price = 'Price unavailable';
           const priceEl =
             card.querySelector('[data-testid="product-card-price"]') ||
@@ -137,7 +137,7 @@ export async function scrapeZepto(product, location) {
             if (priceMatch) price = priceMatch[0].replace(/\s/g, '');
           }
 
-          // Extract weight
+         
           let weight = '';
           const weightEl =
             card.querySelector('[data-testid="product-card-quantity"]') ||
@@ -150,7 +150,7 @@ export async function scrapeZepto(product, location) {
             if (weightMatch) weight = weightMatch[0];
           }
 
-          // Extract image
+          
           const img = card.querySelector('img');
           let image = '';
           if (img) {
@@ -177,7 +177,7 @@ export async function scrapeZepto(product, location) {
             }
           }
 
-          // Extract URL
+         
           const href =
             card.getAttribute('href') ||
             card.closest('a')?.getAttribute('href') ||
@@ -237,7 +237,7 @@ export async function scrapeJioMart(location, product) {
 
       await waitFor(1000);
 
-      // Handle location popup if present
+      
       try {
         const locationButtons = await page.$$('button');
         for (const btn of locationButtons) {
@@ -255,7 +255,7 @@ export async function scrapeJioMart(location, product) {
           }
         }
       } catch (e) {
-        // ignore
+        
       }
 
       await page.evaluate(() => window.scrollBy(0, 800));
