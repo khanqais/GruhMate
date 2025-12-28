@@ -94,10 +94,15 @@ export const deleteStock = async (req, res) => {
 
     await Stock.findByIdAndDelete(id);
 
-    await notifyTeam(
-      teamId,
-      `🗑️ STOCK DELETED\n📦 ${stockName} has been removed from inventory\n👤 By: ${userName || 'Team member'}`
-    );
+    // ✅ Send notification
+    try {
+      await notifyTeam(
+        teamId,
+        `🗑️ STOCK DELETED\n📦 ${stockName} has been removed from inventory\n👤 By: ${userName || 'Team member'}`
+      );
+    } catch (notifyError) {
+      console.error("⚠️ Notification failed:", notifyError.message);
+    }
 
     res.json({ message: "Stock deleted successfully" });
   } catch (error) {

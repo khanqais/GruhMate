@@ -1,49 +1,24 @@
-import mongoose from 'mongoose';
+// models/Stock.js
+import mongoose from "mongoose";
 
-const stockSchema = new mongoose.Schema(
-  {
-    // Team Reference yes relation ke liye necessary
-    teamId: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: 'Team',
-      required: true
-    },
-
-    name: {
-      type: String,
-      required: true,
-      trim: true
-    },
-
-    quantity: {
-      type: Number,
-      required: true,
-      min: 0
-    },
-
-    unit: {
-      type: String,
-      enum: ['kg', 'g', 'litre', 'ml', 'piece', 'packet', 'bottle', 'box'],
-      required: true
-    },
-
-    consumptionRate: {
-      type: String,
-      enum: ['daily', 'weekly', 'monthly', 'rare'],
-      // required: true
-    },
-
-    expiryDate: {
-      type: Date,
-      default: null
-    },
-
-    brand: {
-      type: String,
-      trim: true
-    }
+const stockSchema = new mongoose.Schema({
+  name: { type: String, required: true },
+  quantity: { type: Number, required: true },
+  unit: { type: String, required: true },
+  consumptionRate: { type: String },
+  requiredQuantity: { type: Number },
+  expiryDate: { type: Date },
+  brand: { type: String },
+  teamId: { type: mongoose.Schema.Types.ObjectId, ref: "Team", required: true },
+  
+  // ✅ ADD THESE TWO FIELDS (for smart expiry notifications)
+  lastExpiryNotification: { 
+    type: String, 
+    enum: ['30days', '1day', 'expired', null],
+    default: null 
   },
-  { timestamps: true }
-);
+  lastNotificationDate: { type: Date }
+}, { timestamps: true });
 
-export default mongoose.model('Stock', stockSchema);
+const Stock = mongoose.model("Stock", stockSchema);
+export default Stock;

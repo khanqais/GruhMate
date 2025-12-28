@@ -12,14 +12,51 @@ router.post("/", addStock);
 // Get stock by team
 router.get("/team/:teamId", getStockByTeam);
 
-// Update stock (uses controller)
-router.put("/:id", updateStock);
+// ✅ FIXED: Update stock (handles expiry and consumption rate)
+router.put("/:id", async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { expiryDate, consumptionRate, userName } = req.body;
 
-// Delete stock (uses controller)
+    if (!expiryDate && !consumptionRate) {
+      return res.status(400).json({ error: "At least one field (expiryDate or consumptionRate) is required" });
+    }
+
+    const updateData = {};
+    if (expiryDate) updateData.expiryDate = expiryDate;
+    if (consumptionRate) updateData.consumptionRate = consumptionRate;
+
+    const updated = await Stock.findByIdAndUpdate(
+      id,
+      updateData,
+      { new: true, runValidators: true }
+    );
+
+    if (!updated) {
+      return res.status(404).json({ error: "Stock item not found" });
+    }
+
+    // ✅ Send notification
+    try {
+      await notifyTeam(
+        updated.teamId,
+        `📝 STOCK UPDATED\n📦 ${updated.name}\n${expiryDate ? `⏰ Expiry: ${new Date(expiryDate).toLocaleDateString()}\n` : ''}${consumptionRate ? `📊 Consumption: ${consumptionRate}\n` : ''}👤 By: ${userName || 'Team member'}`
+      );
+    } catch (notifyError) {
+      console.error("⚠️ Notification failed:", notifyError.message);
+    }
+
+    res.json(updated); // ✅ Return updated stock directly
+  } catch (err) {
+    console.error("Error updating stock:", err);
+    res.status(500).json({ error: "Server error" });
+  }
+});
+
+// ✅ Delete stock (uses controller)
 router.delete("/:id", deleteStock);
 
-// ✅ FIXED: Decrement stock WITH better error handling
-// ✅ FIXED: Decrement stock - Check if quantity is already 0
+// Decrement stock
 router.patch("/:id/decrement", async (req, res) => {
   try {
     const stock = await Stock.findById(req.params.id);
@@ -29,7 +66,6 @@ router.patch("/:id/decrement", async (req, res) => {
 
     const userName = req.body.userName || 'Team member';
 
-    // ✅ Check if quantity is already 0
     if (stock.quantity <= 0) {
       return res.status(400).json({ 
         message: "Stock is already at zero. Cannot decrease further.",
@@ -38,11 +74,9 @@ router.patch("/:id/decrement", async (req, res) => {
       });
     }
 
-    // Decrease quantity
     stock.quantity -= 1;
     await stock.save();
 
-    // ✅ Send notification for decrease
     try {
       await notifyTeam(
         stock.teamId,
@@ -52,7 +86,6 @@ router.patch("/:id/decrement", async (req, res) => {
       console.error("⚠️ Notification failed:", notifyError.message);
     }
 
-    // ✅ If stock reaches zero, add to buylist and delete
     if (stock.quantity === 0) {
       const buyItem = await BuyList.create({
         teamId: stock.teamId,
@@ -61,7 +94,6 @@ router.patch("/:id/decrement", async (req, res) => {
         brand: stock.brand
       });
 
-      // Send notification for stock finished
       try {
         await notifyTeam(
           stock.teamId,
@@ -86,8 +118,7 @@ router.patch("/:id/decrement", async (req, res) => {
   }
 });
 
-
-// ✅ FIXED: Increment stock WITH better error handling
+// Increment stock
 router.patch("/:id/increment", async (req, res) => {
   try {
     const stock = await Stock.findByIdAndUpdate(
@@ -102,7 +133,6 @@ router.patch("/:id/increment", async (req, res) => {
 
     const userName = req.body.userName || 'Team member';
     
-    // ✅ TRY to send notification, but don't fail if it errors
     try {
       await notifyTeam(
         stock.teamId,
@@ -142,7 +172,6 @@ router.post("/buylist", async (req, res) => {
       brand
     });
 
-    // ✅ TRY to send notification
     try {
       await notifyTeam(
         teamId,
@@ -174,7 +203,6 @@ router.delete("/buylist/:id", async (req, res) => {
 
     await BuyList.findByIdAndDelete(id);
 
-    // ✅ TRY to send notification
     try {
       await notifyTeam(
         teamId,
@@ -190,35 +218,5 @@ router.delete("/buylist/:id", async (req, res) => {
     res.status(500).json({ message: "Server error: " + err.message });
   }
 });
-
-// Update expiry and consumption rate
-router.put("/:id", async (req, res) => {
-  const { id } = req.params;
-  const { expiry, consumptionRate } = req.body;
-
-  if (!expiry || !consumptionRate) {
-    return res.status(400).json({ error: "Expiry and consumptionRate are required" });
-  }
-
-  try {
-    const updated = await Stock.findByIdAndUpdate(
-      id,
-      { expiry, consumptionRate },
-      { new: true, runValidators: true }
-    );
-
-    if (!updated) {
-      return res.status(404).json({ error: "Stock item not found" });
-    }
-
-    res.json({ message: "Stock updated successfully", stock: updated });
-  } catch (err) {
-    console.error("Error updating stock:", err);
-    res.status(500).json({ error: "Server error" });
-  }
-});
-
-
-
 
 export default router;

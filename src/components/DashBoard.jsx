@@ -4,8 +4,6 @@ import axios from "axios";
 import { chef } from "../assets/images";
 import Footer from "./Footer";
 import { useAuth } from "../context/AuthContext";
-import RecipesPage from "./RecipesPage";
-import RecipeLauncherButton from "./RecipeLauncherButton";
 
 const Dashboard = () => {
   const { currentUser, logout } = useAuth();
@@ -16,10 +14,8 @@ const Dashboard = () => {
   const [loading, setLoading] = useState(true);
   const [refreshKey, setRefreshKey] = useState(0);
   const [expiringItems, setExpiringItems] = useState([]);
-  const [showRecipes, setShowRecipes] = useState(false);
 
   const teamId = currentUser?.team;
-  console.log(teamId);
 
   // ✅ Check for expiring items (expires within 3 days)
   const checkExpiringItems = () => {
@@ -36,14 +32,14 @@ const Dashboard = () => {
     setExpiringItems(expiring);
 
     // Show alert if items are expiring
-    if (expiring.length > 0 && location.pathname === "/dashboard") {
-      const itemNames = expiring.map((item) => item.name).join(", ");
-      setTimeout(() => {
-        alert(
-          `⚠️ Warning: ${expiring.length} item(s) expiring soon:\n${itemNames}`
-        );
-      }, 1000);
-    }
+    // if (expiring.length > 0 && location.pathname === "/dashboard") {
+    //   const itemNames = expiring.map((item) => item.name).join(", ");
+    //   setTimeout(() => {
+    //     alert(
+    //       `⚠️ Warning: ${expiring.length} item(s) expiring soon:\n${itemNames}`
+    //     );
+    //   }, 1000);
+    // }
   };
 
   // Fetch stock from backend
@@ -122,18 +118,15 @@ const Dashboard = () => {
       const reqQty = s.consumptionRate || s.requiredQuantity || 0;
       return getStatus(s.quantity, reqQty) !== "normal";
     }).length,
-    expiringSoon: expiringItems.length, // ✅ Real expiring count
-    monthlySavings: calculateMonthlySavings(), // ✅ Real calculation
+    expiringSoon: expiringItems.length,
+    monthlySavings: calculateMonthlySavings(),
   };
 
-  // ✅ Calculate monthly savings (approximate based on buylist)
+  // ✅ Calculate monthly savings
   function calculateMonthlySavings() {
-    // Estimate: Each item in buylist saved = ₹50 average
-    // This prevents waste from expired/out-of-stock items
     const estimatedSavingsPerItem = 50;
     const totalSavings = buyList.length * estimatedSavingsPerItem;
 
-    // Alternative: Count low stock items managed
     const lowStockManaged = stocks.filter((s) => {
       const reqQty = s.consumptionRate || s.requiredQuantity || 0;
       return s.quantity > 0 && s.quantity <= reqQty;
@@ -152,6 +145,7 @@ const Dashboard = () => {
     return diffDays;
   };
 
+  // ✅ Handle decrease stock
   const handleDecrease = async (id, name) => {
     try {
       const res = await axios.patch(
@@ -185,6 +179,7 @@ const Dashboard = () => {
     }
   };
 
+  // ✅ Handle increase stock
   const handleIncrease = async (id) => {
     try {
       const res = await axios.patch(
@@ -206,8 +201,66 @@ const Dashboard = () => {
       alert("Failed to increase stock");
     }
   };
-  async function handleSave(item) { try { const res = await fetch(`http://localhost:5000/api/stock/${item._id}`, { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ expiryDate: item.tempExpiryDate, consumptionRate: item.tempConsumptionRate, }), }); const data = await res.json(); if (!res.ok) throw new Error(data.error || "Update failed"); // update local state with the new item 
-  setStocks(stocks.map(s => s._id === item._id ? data : s)); } catch (err) { console.error("Error saving stock:", err); alert(err.message); } }
+
+  // ✅ Handle save expiry/consumption rate
+  async function handleSave(item) {
+    try {
+      if (!item.tempExpiryDate && !item.tempConsumptionRate) {
+        alert("Please fill at least one field");
+        return;
+      }
+
+      const res = await axios.put(
+        `http://localhost:5000/api/stock/${item._id}`,
+        {
+          expiryDate: item.tempExpiryDate,
+          consumptionRate: item.tempConsumptionRate,
+          userName: currentUser?.name,
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("token")}`,
+            "Content-Type": "application/json",
+          },
+        }
+      );
+
+      // ✅ Update local state with the response data
+      setStocks(stocks.map((s) => (s._id === item._id ? res.data : s)));
+
+      alert("✅ Stock updated successfully!");
+    } catch (err) {
+      console.error("Error saving stock:", err);
+      alert(err.response?.data?.error || "Update failed");
+    }
+  }
+
+  // ✅ Handle delete stock
+  const handleDelete = async (id, name) => {
+    try {
+      const confirmDelete = window.confirm(
+        `Are you sure you want to delete "${name}" from inventory?`
+      );
+      if (!confirmDelete) return;
+
+      await axios.delete(`http://localhost:5000/api/stock/${id}`, {
+        headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
+        data: { userName: currentUser?.name },
+      });
+
+      // Remove from state
+      setStocks((prev) => prev.filter((s) => s._id !== id));
+      alert(`✅ "${name}" has been deleted successfully`);
+    } catch (err) {
+      console.error("Delete error:", err);
+      alert("Failed to delete item");
+    }
+  };
+
+  const handleLogout = () => {
+    logout();
+    navigate("/", { replace: true });
+  };
 
   if (!teamId) {
     return (
@@ -232,6 +285,9 @@ const Dashboard = () => {
 
   return (
     <div className="min-h-screen bg-gray-50">
+      {/* Header */}
+     
+
       {/* Main */}
       <main className="container mx-auto px-6 py-8">
         <div className="mb-8">
@@ -331,7 +387,7 @@ const Dashboard = () => {
               <thead className="bg-gray-50 border-b">
                 <tr>
                   <th className="text-left py-3 px-6">Item Name</th>
-                  <th className="text-left py-3 px-6">Min Quantity</th>
+                  <th className="text-left py-3 px-6">Consumption Rate</th>
                   <th className="text-left py-3 px-6">Available Quantity</th>
                   <th className="text-left py-3 px-6">Unit</th>
                   <th className="text-left py-3 px-6">Expiry</th>
@@ -364,278 +420,153 @@ const Dashboard = () => {
                       daysUntilExpiry !== null && daysUntilExpiry <= 3;
 
                     return (
-                      // <tr
-                      //   key={item._id}
-                      //   className={`border-b hover:bg-gray-50 ${
-                      //     isExpiring ? "bg-red-50" : ""
-                      //   }`}
-                      // >
-                      //   {/* <td className="py-3 px-6">
-                      //     <div className="font-medium">{item.name}</div>
-                      //     {item.brand && (
-                      //       <div className="text-xs text-gray-500">
-                      //         Brand: {item.brand}
-                      //       </div>
-                      //     )}
-                      //   </td> */}
-                      //   <td className="py-3 px-6">
-                      //     {item.consumptionRate ? (
-                      //       item.consumptionRate
-                      //     ) : (
-                      //       <div className="flex items-center gap-2 text-red-600">
-                      //         <span>❌ Missing</span>
-                      //         <select
-                      //           value={item.tempConsumptionRate || ""}
-                      //           onChange={(e) => {
-                      //             item.tempConsumptionRate = e.target.value;
-                      //             setStocks([...stocks]); // trigger re-render
-                      //           }}
-                      //           className="border rounded px-2 py-1"
-                      //         >
-                      //           <option value="">Select</option>
-                      //           <option value="daily">Daily</option>
-                      //           <option value="weekly">Weekly</option>
-                      //           <option value="rarely">Rarely</option>
-                      //         </select>
-                      //       </div>
-                      //     )}
-                      //   </td>
-
-                      //   <td className="py-3 px-6">
-                      //     {item.expiryDate ? (
-                      //       <div>
-                      //         <div className="text-sm">
-                      //           {new Date(item.expiryDate).toLocaleDateString()}
-                      //         </div>
-                      //         {/* existing expiry warning logic */}
-                      //       </div>
-                      //     ) : (
-                      //       <div className="flex items-center gap-2 text-red-600">
-                      //         <span>❌ Missing</span>
-                      //         <input
-                      //           type="date"
-                      //           value={item.tempExpiryDate || ""}
-                      //           onChange={(e) => {
-                      //             item.tempExpiryDate = e.target.value;
-                      //             setStocks([...stocks]);
-                      //           }}
-                      //           className="border rounded px-2 py-1"
-                      //         />
-                      //       </div>
-                      //     )}
-                      //   </td>
-
-                      //   <td className="py-3 px-6">
-                      //     <button
-                      //       onClick={() => handleSave(item)}
-                      //       disabled={
-                      //         !item.tempExpiryDate || !item.tempConsumptionRate
-                      //       }
-                      //       className="px-3 py-1 bg-indigo-600 text-white rounded disabled:opacity-50"
-                      //     >
-                      //       Save
-                      //     </button>
-                      //   </td>
-
-                      //   <td className="py-3 px-6">
-                      //     {item.consumptionRate || item.requiredQuantity || "-"}
-                      //   </td>
-                      //   <td className="py-3 px-6 font-bold">{item.quantity}</td>
-                      //   <td className="py-3 px-6">{item.unit}</td>
-                      //   <td className="py-3 px-6">
-                      //     {item.expiryDate ? (
-                      //       <div>
-                      //         <div className="text-sm">
-                      //           {new Date(item.expiryDate).toLocaleDateString()}
-                      //         </div>
-                      //         {daysUntilExpiry !== null && (
-                      //           <div
-                      //             className={`text-xs font-semibold ${
-                      //               daysUntilExpiry <= 0
-                      //                 ? "text-red-600"
-                      //                 : daysUntilExpiry <= 3
-                      //                 ? "text-orange-600"
-                      //                 : "text-gray-500"
-                      //             }`}
-                      //           >
-                      //             {daysUntilExpiry <= 0
-                      //               ? "⚠️ Expired!"
-                      //               : daysUntilExpiry === 1
-                      //               ? "⚠️ Expires tomorrow"
-                      //               : `${daysUntilExpiry} days left`}
-                      //           </div>
-                      //         )}
-                      //       </div>
-                      //     ) : (
-                      //       <span className="text-gray-400">-</span>
-                      //     )}
-                      //   </td>
-                      //   <td className="py-3 px-6">
-                      //     <span
-                      //       className={`px-3 py-1 rounded-full text-xs font-medium ${
-                      //         status === "critical"
-                      //           ? "bg-red-100 text-red-800"
-                      //           : status === "low"
-                      //           ? "bg-yellow-100 text-yellow-800"
-                      //           : "bg-green-100 text-green-800"
-                      //       }`}
-                      //     >
-                      //       {status.toUpperCase()}
-                      //     </span>
-                      //   </td>
-                      //   <td className="py-3 px-6">
-                      //     <div className="flex gap-2">
-                      //       <button
-                      //         onClick={() =>
-                      //           handleDecrease(item._id, item.name)
-                      //         }
-                      //         disabled={item.quantity === 0}
-                      //         className={`px-3 py-1 rounded text-sm ${
-                      //           item.quantity === 0
-                      //             ? "bg-gray-300 text-gray-500 cursor-not-allowed"
-                      //             : "bg-red-500 text-white hover:bg-red-600"
-                      //         }`}
-                      //       >
-                      //         -
-                      //       </button>
-                      //       <button
-                      //         onClick={() => handleIncrease(item._id)}
-                      //         className="px-3 py-1 bg-green-500 text-white rounded hover:bg-green-600 text-sm"
-                      //       >
-                      //         +
-                      //       </button>
-                      //     </div>
-                      //   </td>
-                      // </tr>
                       <tr
-  key={item._id}
-  className={`border-b hover:bg-gray-50 ${isExpiring ? "bg-red-50" : ""}`}
->
-  {/* Item Name */}
-  <td className="py-3 px-6">
-    <div className="font-medium">{item.name}</div>
-    {item.brand && (
-      <div className="text-xs text-gray-500">Brand: {item.brand}</div>
-    )}
-  </td>
+                        key={item._id}
+                        className={`border-b hover:bg-gray-50 ${
+                          isExpiring ? "bg-red-50" : ""
+                        }`}
+                      >
+                        {/* Item Name */}
+                        <td className="py-3 px-6">
+                          <div className="font-medium">{item.name}</div>
+                          {item.brand && (
+                            <div className="text-xs text-gray-500">
+                              Brand: {item.brand}
+                            </div>
+                          )}
+                        </td>
 
-  {/* Min Quantity (consumptionRate / requiredQuantity, with missing form) */}
-  <td className="py-3 px-6">
-    {item.consumptionRate ? (
-      item.consumptionRate
-    ) : (
-      <div className="flex items-center gap-2 text-red-600">
-        <span>❌ Missing</span>
-        <select
-          value={item.tempConsumptionRate || ""}
-          onChange={(e) => {
-            item.tempConsumptionRate = e.target.value;
-            setStocks([...stocks]);
-          }}
-          className="border rounded px-2 py-1"
-        >
-          <option value="">Select</option>
-          <option value="daily">Daily</option>
-          <option value="weekly">Weekly</option>
-          <option value="rarely">Rarely</option>
-        </select>
-      </div>
-    )}
-  </td>
+                        {/* Consumption Rate */}
+                        <td className="py-3 px-6">
+                          {item.consumptionRate ? (
+                            <span className="capitalize">{item.consumptionRate}</span>
+                          ) : (
+                            <div className="flex items-center gap-2">
+                              <span className="text-red-600 text-xs">❌ Missing</span>
+                              <select
+                                value={item.tempConsumptionRate || ""}
+                                onChange={(e) => {
+                                  item.tempConsumptionRate = e.target.value;
+                                  setStocks([...stocks]);
+                                }}
+                                className="border rounded px-2 py-1 text-sm"
+                              >
+                                <option value="">Select</option>
+                                <option value="daily">Daily</option>
+                                <option value="weekly">Weekly</option>
+                                <option value="monthly">Monthly</option>
+                                <option value="rarely">Rarely</option>
+                              </select>
+                            </div>
+                          )}
+                        </td>
 
-  {/* Available Quantity */}
-  <td className="py-3 px-6 font-bold">{item.quantity}</td>
+                        {/* Available Quantity */}
+                        <td className="py-3 px-6 font-bold">{item.quantity}</td>
 
-  {/* Unit */}
-  <td className="py-3 px-6">{item.unit}</td>
+                        {/* Unit */}
+                        <td className="py-3 px-6">{item.unit}</td>
 
-  {/* Expiry */}
-  <td className="py-3 px-6">
-    {item.expiryDate ? (
-      <div>
-        <div className="text-sm">
-          {new Date(item.expiryDate).toLocaleDateString()}
-        </div>
-        {daysUntilExpiry !== null && (
-          <div
-            className={`text-xs font-semibold ${
-              daysUntilExpiry <= 0
-                ? "text-red-600"
-                : daysUntilExpiry <= 3
-                ? "text-orange-600"
-                : "text-gray-500"
-            }`}
-          >
-            {daysUntilExpiry <= 0
-              ? "⚠️ Expired!"
-              : daysUntilExpiry === 1
-              ? "⚠️ Expires tomorrow"
-              : `${daysUntilExpiry} days left`}
-          </div>
-        )}
-      </div>
-    ) : (
-      <div className="flex items-center gap-2 text-red-600">
-        <span>❌ Missing</span>
-        <input
-          type="date"
-          value={item.tempExpiryDate || ""}
-          onChange={(e) => {
-            item.tempExpiryDate = e.target.value;
-            setStocks([...stocks]);
-          }}
-          className="border rounded px-2 py-1"
-        />
-      </div>
-    )}
-  </td>
+                        {/* Expiry */}
+                        <td className="py-3 px-6">
+                          {item.expiryDate ? (
+                            <div>
+                              <div className="text-sm">
+                                {new Date(item.expiryDate).toLocaleDateString()}
+                              </div>
+                              {daysUntilExpiry !== null && (
+                                <div
+                                  className={`text-xs font-semibold ${
+                                    daysUntilExpiry <= 0
+                                      ? "text-red-600"
+                                      : daysUntilExpiry <= 3
+                                      ? "text-orange-600"
+                                      : "text-gray-500"
+                                  }`}
+                                >
+                                  {daysUntilExpiry <= 0
+                                    ? "⚠️ Expired!"
+                                    : daysUntilExpiry === 1
+                                    ? "⚠️ Expires tomorrow"
+                                    : `${daysUntilExpiry} days left`}
+                                </div>
+                              )}
+                            </div>
+                          ) : (
+                            <div className="flex items-center gap-2">
+                              <span className="text-red-600 text-xs">❌ Missing</span>
+                              <input
+                                type="date"
+                                value={item.tempExpiryDate || ""}
+                                onChange={(e) => {
+                                  item.tempExpiryDate = e.target.value;
+                                  setStocks([...stocks]);
+                                }}
+                                className="border rounded px-2 py-1 text-sm"
+                              />
+                            </div>
+                          )}
+                        </td>
 
-  {/* Status */}
-  <td className="py-3 px-6">
-    <span
-      className={`px-3 py-1 rounded-full text-xs font-medium ${
-        status === "critical"
-          ? "bg-red-100 text-red-800"
-          : status === "low"
-          ? "bg-yellow-100 text-yellow-800"
-          : "bg-green-100 text-green-800"
-      }`}
-    >
-      {status.toUpperCase()}
-    </span>
-  </td>
+                        {/* Status */}
+                        <td className="py-3 px-6">
+                          <span
+                            className={`px-3 py-1 rounded-full text-xs font-medium ${
+                              status === "critical"
+                                ? "bg-red-100 text-red-800"
+                                : status === "low"
+                                ? "bg-yellow-100 text-yellow-800"
+                                : "bg-green-100 text-green-800"
+                            }`}
+                          >
+                            {status.toUpperCase()}
+                          </span>
+                        </td>
 
-  {/* Actions */}
-  <td className="py-3 px-6">
-    <div className="flex gap-2">
-      <button
-        onClick={() => handleDecrease(item._id, item.name)}
-        disabled={item.quantity === 0}
-        className={`px-3 py-1 rounded text-sm ${
-          item.quantity === 0
-            ? "bg-gray-300 text-gray-500 cursor-not-allowed"
-            : "bg-red-500 text-white hover:bg-red-600"
-        }`}
-      >
-        -
-      </button>
-      <button
-        onClick={() => handleIncrease(item._id)}
-        className="px-3 py-1 bg-green-500 text-white rounded hover:bg-green-600 text-sm"
-      >
-        +
-      </button>
-      <button
-        onClick={() => handleSave(item)}
-        disabled={!item.tempExpiryDate || !item.tempConsumptionRate}
-        className="px-3 py-1 bg-indigo-600 text-white rounded disabled:opacity-50"
-      >
-        Save
-      </button>
-    </div>
-  </td>
-</tr>
-
+                        {/* Actions */}
+                        <td className="py-3 px-6">
+                          <div className="flex gap-2 flex-wrap">
+                            <button
+                              onClick={() => handleDecrease(item._id, item.name)}
+                              disabled={item.quantity === 0}
+                              className={`px-3 py-1 rounded text-sm ${
+                                item.quantity === 0
+                                  ? "bg-gray-300 text-gray-500 cursor-not-allowed"
+                                  : "bg-red-500 text-white hover:bg-red-600"
+                              }`}
+                              title="Decrease quantity"
+                            >
+                              -
+                            </button>
+                            <button
+                              onClick={() => handleIncrease(item._id)}
+                              className="px-3 py-1 bg-green-500 text-white rounded hover:bg-green-600 text-sm"
+                              title="Increase quantity"
+                            >
+                              +
+                            </button>
+                            {(!item.expiryDate || !item.consumptionRate) && (
+                              <button
+                                onClick={() => handleSave(item)}
+                                disabled={
+                                  !item.tempExpiryDate && !item.tempConsumptionRate
+                                }
+                                className="px-3 py-1 bg-indigo-600 text-white rounded hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed text-sm"
+                                title="Save missing data"
+                              >
+                                💾 Save
+                              </button>
+                            )}
+                            <button
+                              onClick={() => handleDelete(item._id, item.name)}
+                              className="px-3 py-1 bg-gray-600 text-white rounded hover:bg-gray-700 text-sm"
+                              title="Delete item"
+                            >
+                              🗑️
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
                     );
                   })
                 )}
@@ -643,24 +574,10 @@ const Dashboard = () => {
             </table>
           </div>
 
-          <div className="mt-6">
-            <RecipeLauncherButton onOpen={() => setShowRecipes(true)} />
+          <div className="px-6 py-4 bg-gray-50 text-sm text-gray-600">
+            Showing {stocks.length} items
           </div>
-
-          {/* Render RecipesPage directly */}
-          {showRecipes && (
-            <div className="mt-6">
-              <RecipesPage />
-              <button
-                className="mt-4 px-3 py-2 rounded bg-gray-200 hover:bg-gray-300"
-                onClick={() => setShowRecipes(false)}
-              >
-                Close Recipes
-              </button>
-            </div>
-          )}
         </div>
-        <div></div>
       </main>
 
       <Footer />
