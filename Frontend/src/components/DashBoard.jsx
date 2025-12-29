@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from "react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import axios from "axios";
-import { chef } from "../assets/images";
-import Footer from "./Footer";
 import { useAuth } from "../context/AuthContext";
+
+import Footer from "./Footer";
 
 const Dashboard = () => {
   const { currentUser, logout } = useAuth();
@@ -14,8 +14,22 @@ const Dashboard = () => {
   const [loading, setLoading] = useState(true);
   const [refreshKey, setRefreshKey] = useState(0);
   const [expiringItems, setExpiringItems] = useState([]);
+  
+  const [vitalityScore, setVitalityScore] = useState(null);
+const [vitalityLoading, setVitalityLoading] = useState(true);
+
 
   const teamId = currentUser?.team;
+
+  // ✅ Fetch Vitality Score
+  useEffect(() => {
+    if (teamId) {
+      axios
+        .get(`http://localhost:5000/api/nutrition/vitality/${teamId}`)
+        .then((res) => setVitalityScore(res.data.currentScore))
+        .catch((err) => console.error("Failed to fetch vitality:", err));
+    }
+  }, [teamId]);
 
   // ✅ Check for expiring items (expires within 3 days)
   const checkExpiringItems = () => {
@@ -30,17 +44,42 @@ const Dashboard = () => {
     });
 
     setExpiringItems(expiring);
-
-    // Show alert if items are expiring
-    // if (expiring.length > 0 && location.pathname === "/dashboard") {
-    //   const itemNames = expiring.map((item) => item.name).join(", ");
-    //   setTimeout(() => {
-    //     alert(
-    //       `⚠️ Warning: ${expiring.length} item(s) expiring soon:\n${itemNames}`
-    //     );
-    //   }, 1000);
-    // }
   };
+  const fetchVitalityScore = async () => {
+  if (!teamId) return;
+  
+  try {
+    setVitalityLoading(true);
+    const res = await axios.get(
+      `http://localhost:5000/api/nutrition/vitality/${teamId}`,
+      {
+        headers: { Authorization: `Bearer ${localStorage.getItem("token")}` }
+      }
+    );
+    setVitalityScore(res.data.currentScore);
+  } catch (err) {
+    console.error("Failed to fetch vitality:", err);
+    setVitalityScore(null);
+  } finally {
+    setVitalityLoading(false);
+  }
+};
+
+useEffect(() => {
+  fetchVitalityScore();
+}, [teamId]);
+
+// ✅ Refetch after stock changes
+useEffect(() => {
+  if (stocks.length > 0) {
+    // Delay to allow backend to recalculate
+    const timer = setTimeout(() => {
+      fetchVitalityScore();
+    }, 1000);
+    
+    return () => clearTimeout(timer);
+  }
+}, [stocks.length]); 
 
   // Fetch stock from backend
   const fetchStocks = async () => {
@@ -285,11 +324,11 @@ const Dashboard = () => {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* Header */}
+      {/* ✅ Navbar */}
      
 
       {/* Main */}
-      <main className="container mx-auto px-6 py-8">
+      <main className="container mx-auto px-4 sm:px-6 py-8">
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-gray-900">Dashboard</h1>
           <p className="text-gray-600 mt-2">
@@ -299,7 +338,7 @@ const Dashboard = () => {
 
         {/* ✅ Expiring Items Alert Banner */}
         {expiringItems.length > 0 && (
-          <div className="mb-6 bg-red-50 border-l-4 border-red-500 p-4 rounded-lg">
+          <div className="mb-6 bg-red-50 border-l-4 border-red-500 p-4 rounded-lg shadow-sm">
             <div className="flex items-center">
               <div className="text-2xl mr-3">⚠️</div>
               <div>
@@ -321,8 +360,8 @@ const Dashboard = () => {
           </div>
         )}
 
-        {/* Stats */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+        {/* Stats Grid */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 mb-8">
           {[
             [
               "Total Items",
@@ -355,7 +394,7 @@ const Dashboard = () => {
           ].map(([title, value, icon, bgColor, textColor], i) => (
             <div
               key={i}
-              className={`${bgColor} rounded-xl p-6 shadow-sm border`}
+              className={`${bgColor} rounded-xl p-6 shadow-sm border hover:shadow-md transition-shadow`}
             >
               <div className="flex justify-between items-center">
                 <div>
@@ -370,15 +409,72 @@ const Dashboard = () => {
           ))}
         </div>
 
+        {/* ✅ Nutrition Quick Link Card */}
+        {/* Nutrition Quick Link Card */}
+<div className="mb-8 bg-gradient-to-r from-green-50 via-emerald-50 to-teal-50 border border-green-200 rounded-2xl p-6 shadow-sm hover:shadow-md transition-all">
+  <div className="flex flex-col md:flex-row items-center justify-between gap-4">
+    <div className="flex items-center space-x-4">
+      <div className="text-5xl sm:text-6xl">🥗</div>
+      <div>
+        <h3 className="text-xl font-bold text-gray-800">
+          Household Vitality Score
+        </h3>
+        <p className="text-gray-600 mt-1 text-sm">
+          Track your nutrition, get personalized health recommendations
+        </p>
+        {vitalityLoading ? (
+          <div className="mt-2 text-sm text-gray-500">
+            Loading score...
+          </div>
+        ) : vitalityScore !== null ? (
+          <div className="mt-2 flex items-center space-x-2">
+            <span className="text-3xl font-bold text-green-600">
+              {vitalityScore}
+            </span>
+            <span className="text-gray-500">/100</span>
+            <span
+              className={`ml-2 px-3 py-1 rounded-full text-xs font-semibold ${
+                vitalityScore >= 80
+                  ? "bg-green-100 text-green-700"
+                  : vitalityScore >= 60
+                  ? "bg-yellow-100 text-yellow-700"
+                  : "bg-red-100 text-red-700"
+              }`}
+            >
+              {vitalityScore >= 80
+                ? "✅ Excellent"
+                : vitalityScore >= 60
+                ? "⚠️ Good"
+                : "🚨 Needs Improvement"}
+            </span>
+          </div>
+        ) : (
+          <div className="mt-2 text-sm text-gray-500">
+            No data yet - add items to start tracking
+          </div>
+        )}
+      </div>
+    </div>
+    <Link
+      to="/nutrition"
+      className="w-full md:w-auto px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors font-semibold flex items-center justify-center space-x-2 shadow-sm"
+    >
+      <span>View Nutrition Dashboard</span>
+      <span>→</span>
+    </Link>
+  </div>
+</div>
+
+
         {/* Stock Table */}
         <div className="bg-white rounded-xl shadow-sm border overflow-hidden">
-          <div className="px-6 py-4 border-b flex justify-between items-center">
+          <div className="px-4 sm:px-6 py-4 border-b flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
             <h2 className="text-xl font-bold">Stock Items</h2>
             <Link
               to="/stockform"
-              className="px-4 py-2 bg-blue-600 text-white text-sm rounded-lg hover:bg-blue-700"
+              className="w-full sm:w-auto px-4 py-2 bg-blue-600 text-white text-sm rounded-lg hover:bg-blue-700 text-center"
             >
-              Add Item
+              + Add Item
             </Link>
           </div>
 
@@ -386,27 +482,53 @@ const Dashboard = () => {
             <table className="w-full">
               <thead className="bg-gray-50 border-b">
                 <tr>
-                  <th className="text-left py-3 px-6">Item Name</th>
-                  <th className="text-left py-3 px-6">Consumption Rate</th>
-                  <th className="text-left py-3 px-6">Available Quantity</th>
-                  <th className="text-left py-3 px-6">Unit</th>
-                  <th className="text-left py-3 px-6">Expiry</th>
-                  <th className="text-left py-3 px-6">Status</th>
-                  <th className="text-left py-3 px-6">Actions</th>
+                  <th className="text-left py-3 px-4 sm:px-6 text-sm font-semibold text-gray-700">
+                    Item Name
+                  </th>
+                  <th className="text-left py-3 px-4 sm:px-6 text-sm font-semibold text-gray-700">
+                    Consumption Rate
+                  </th>
+                  <th className="text-left py-3 px-4 sm:px-6 text-sm font-semibold text-gray-700">
+                    Available Quantity
+                  </th>
+                  <th className="text-left py-3 px-4 sm:px-6 text-sm font-semibold text-gray-700">
+                    Unit
+                  </th>
+                  <th className="text-left py-3 px-4 sm:px-6 text-sm font-semibold text-gray-700">
+                    Expiry
+                  </th>
+                  <th className="text-left py-3 px-4 sm:px-6 text-sm font-semibold text-gray-700">
+                    Status
+                  </th>
+                  <th className="text-left py-3 px-4 sm:px-6 text-sm font-semibold text-gray-700">
+                    Actions
+                  </th>
                 </tr>
               </thead>
 
               <tbody>
                 {loading ? (
                   <tr>
-                    <td colSpan="7" className="py-6 text-center text-gray-500">
-                      Loading stock...
+                    <td colSpan="7" className="py-8 text-center text-gray-500">
+                      <div className="flex flex-col items-center">
+                        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mb-2"></div>
+                        <span>Loading stock...</span>
+                      </div>
                     </td>
                   </tr>
                 ) : stocks.length === 0 ? (
                   <tr>
-                    <td colSpan="7" className="py-6 text-center text-gray-500">
-                      No stock items added yet
+                    <td colSpan="7" className="py-8 text-center text-gray-500">
+                      <div className="flex flex-col items-center">
+                        <div className="text-5xl mb-3">📦</div>
+                        <p className="text-lg font-medium">No stock items added yet</p>
+                        <Link
+                          to="/stockform"
+                          className="mt-3 text-blue-600 hover:underline"
+                        >
+                          Add your first item
+                        </Link>
+                      </div>
                     </td>
                   </tr>
                 ) : (
@@ -422,24 +544,26 @@ const Dashboard = () => {
                     return (
                       <tr
                         key={item._id}
-                        className={`border-b hover:bg-gray-50 ${
+                        className={`border-b hover:bg-gray-50 transition-colors ${
                           isExpiring ? "bg-red-50" : ""
                         }`}
                       >
                         {/* Item Name */}
-                        <td className="py-3 px-6">
-                          <div className="font-medium">{item.name}</div>
+                        <td className="py-3 px-4 sm:px-6">
+                          <div className="font-medium text-gray-900">{item.name}</div>
                           {item.brand && (
-                            <div className="text-xs text-gray-500">
+                            <div className="text-xs text-gray-500 mt-1">
                               Brand: {item.brand}
                             </div>
                           )}
                         </td>
 
                         {/* Consumption Rate */}
-                        <td className="py-3 px-6">
+                        <td className="py-3 px-4 sm:px-6">
                           {item.consumptionRate ? (
-                            <span className="capitalize">{item.consumptionRate}</span>
+                            <span className="capitalize text-gray-700">
+                              {item.consumptionRate}
+                            </span>
                           ) : (
                             <div className="flex items-center gap-2">
                               <span className="text-red-600 text-xs">❌ Missing</span>
@@ -449,7 +573,7 @@ const Dashboard = () => {
                                   item.tempConsumptionRate = e.target.value;
                                   setStocks([...stocks]);
                                 }}
-                                className="border rounded px-2 py-1 text-sm"
+                                className="border rounded px-2 py-1 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                               >
                                 <option value="">Select</option>
                                 <option value="daily">Daily</option>
@@ -462,21 +586,23 @@ const Dashboard = () => {
                         </td>
 
                         {/* Available Quantity */}
-                        <td className="py-3 px-6 font-bold">{item.quantity}</td>
+                        <td className="py-3 px-4 sm:px-6">
+                          <span className="font-bold text-gray-900">{item.quantity}</span>
+                        </td>
 
                         {/* Unit */}
-                        <td className="py-3 px-6">{item.unit}</td>
+                        <td className="py-3 px-4 sm:px-6 text-gray-700">{item.unit}</td>
 
                         {/* Expiry */}
-                        <td className="py-3 px-6">
+                        <td className="py-3 px-4 sm:px-6">
                           {item.expiryDate ? (
                             <div>
-                              <div className="text-sm">
+                              <div className="text-sm text-gray-700">
                                 {new Date(item.expiryDate).toLocaleDateString()}
                               </div>
                               {daysUntilExpiry !== null && (
                                 <div
-                                  className={`text-xs font-semibold ${
+                                  className={`text-xs font-semibold mt-1 ${
                                     daysUntilExpiry <= 0
                                       ? "text-red-600"
                                       : daysUntilExpiry <= 3
@@ -502,14 +628,14 @@ const Dashboard = () => {
                                   item.tempExpiryDate = e.target.value;
                                   setStocks([...stocks]);
                                 }}
-                                className="border rounded px-2 py-1 text-sm"
+                                className="border rounded px-2 py-1 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                               />
                             </div>
                           )}
                         </td>
 
                         {/* Status */}
-                        <td className="py-3 px-6">
+                        <td className="py-3 px-4 sm:px-6">
                           <span
                             className={`px-3 py-1 rounded-full text-xs font-medium ${
                               status === "critical"
@@ -524,12 +650,12 @@ const Dashboard = () => {
                         </td>
 
                         {/* Actions */}
-                        <td className="py-3 px-6">
+                        <td className="py-3 px-4 sm:px-6">
                           <div className="flex gap-2 flex-wrap">
                             <button
                               onClick={() => handleDecrease(item._id, item.name)}
                               disabled={item.quantity === 0}
-                              className={`px-3 py-1 rounded text-sm ${
+                              className={`px-3 py-1 rounded text-sm font-medium transition-colors ${
                                 item.quantity === 0
                                   ? "bg-gray-300 text-gray-500 cursor-not-allowed"
                                   : "bg-red-500 text-white hover:bg-red-600"
@@ -540,7 +666,7 @@ const Dashboard = () => {
                             </button>
                             <button
                               onClick={() => handleIncrease(item._id)}
-                              className="px-3 py-1 bg-green-500 text-white rounded hover:bg-green-600 text-sm"
+                              className="px-3 py-1 bg-green-500 text-white rounded hover:bg-green-600 text-sm font-medium transition-colors"
                               title="Increase quantity"
                             >
                               +
@@ -551,15 +677,15 @@ const Dashboard = () => {
                                 disabled={
                                   !item.tempExpiryDate && !item.tempConsumptionRate
                                 }
-                                className="px-3 py-1 bg-indigo-600 text-white rounded hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed text-sm"
+                                className="px-3 py-1 bg-indigo-600 text-white rounded hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed text-sm font-medium transition-colors"
                                 title="Save missing data"
                               >
-                                💾 Save
+                                💾
                               </button>
                             )}
                             <button
                               onClick={() => handleDelete(item._id, item.name)}
-                              className="px-3 py-1 bg-gray-600 text-white rounded hover:bg-gray-700 text-sm"
+                              className="px-3 py-1 bg-gray-600 text-white rounded hover:bg-gray-700 text-sm font-medium transition-colors"
                               title="Delete item"
                             >
                               🗑️
@@ -574,8 +700,8 @@ const Dashboard = () => {
             </table>
           </div>
 
-          <div className="px-6 py-4 bg-gray-50 text-sm text-gray-600">
-            Showing {stocks.length} items
+          <div className="px-4 sm:px-6 py-4 bg-gray-50 text-sm text-gray-600">
+            Showing {stocks.length} {stocks.length === 1 ? "item" : "items"}
           </div>
         </div>
       </main>

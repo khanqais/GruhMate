@@ -50,6 +50,8 @@ function App() {
           <Route path="/profile" element={<PrivateRoute><Profile /></PrivateRoute>} />
           <Route path="/team/:teamId" element={<PrivateRoute><TeamDetail /></PrivateRoute>} />
           <Route path="/nutrition" element={<PrivateRoute><NutritionDashboard /></PrivateRoute>}/>
+          <Route path="/nutrition" element={<PrivateRoute><NutritionDashboard/></PrivateRoute>}/>
+
 
         </Routes>
       </Router>
