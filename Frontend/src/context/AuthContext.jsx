@@ -12,7 +12,7 @@ export const AuthProvider = ({ children }) => {
   // ✅ NEW: Function to refresh user data from backend
   const refreshUserData = async (userId) => {
     try {
-      const res = await fetch(`http://localhost:5000/api/user/${userId}`);
+      const res = await fetch(`${import.meta.env.VITE_API_URL}/api/user/${userId}`);
       if (res.ok) {
         const updatedUser = await res.json();
         setCurrentUser(updatedUser);

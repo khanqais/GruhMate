@@ -2,6 +2,8 @@ import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { chef } from '../assets/images';
+const API_URL = import.meta.env.VITE_API_URL;
+
 
 const ForgotPassword = () => {
   const navigate = useNavigate();
@@ -16,7 +18,7 @@ const ForgotPassword = () => {
   const [canResend, setCanResend] = useState(true);
 
   // Update this with your backend URL
-  const API_URL = 'http://localhost:5000/api/auth';
+  
 
   // Timer for OTP resend
   React.useEffect(() => {
@@ -77,7 +79,7 @@ const ForgotPassword = () => {
 
     try {
       const formattedPhone = `+91${phone}`;
-      const response = await axios.post(`${API_URL}/forgot-password`, {
+      const response = await axios.post(`${API_URL}/api/auth/forgot-password`, {
         phone: formattedPhone
       });
 
@@ -133,7 +135,7 @@ const ForgotPassword = () => {
 
     try {
       const formattedPhone = `+91${phone}`;
-      const response = await axios.post(`${API_URL}/reset-password`, {
+      const response = await axios.post(`${API_URL}/api/auth/reset-password`, {
         phone: formattedPhone,
         code: otp,
         newPassword: newPassword
@@ -157,7 +159,7 @@ const ForgotPassword = () => {
     
     try {
       const formattedPhone = `+91${phone}`;
-      await axios.post(`${API_URL}/forgot-password`, {
+      await axios.post(`${API_URL}/api/auth/forgot-password`, {
         phone: formattedPhone
       });
 

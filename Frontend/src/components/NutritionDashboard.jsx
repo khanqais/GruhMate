@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
 import { useAuth } from "../context/AuthContext";
-
 import Footer from "./Footer";
+const API_URL = import.meta.env.VITE_API_URL;
+
 
 const NutritionDashboard = () => {
   const { currentUser } = useAuth();
@@ -23,11 +24,14 @@ const NutritionDashboard = () => {
     try {
       setLoading(true);
       
-      const [vitalityRes, recsRes, analyticsRes] = await Promise.all([
-        axios.get(`http://localhost:5000/api/nutrition/vitality/${teamId}`),
-        axios.get(`http://localhost:5000/api/nutrition/recommendations/${teamId}`),
-        axios.get(`http://localhost:5000/api/nutrition/analytics/${teamId}`)
-      ]);
+      
+
+const [vitalityRes, recsRes, analyticsRes] = await Promise.all([
+  axios.get(`${API_URL}/api/nutrition/vitality/${teamId}`),
+  axios.get(`${API_URL}/api/nutrition/recommendations/${teamId}`),
+  axios.get(`${API_URL}/api/nutrition/analytics/${teamId}`)
+]);
+
       
       setVitality(vitalityRes.data);
       setRecommendations(recsRes.data.recommendations || []);
@@ -41,7 +45,9 @@ const NutritionDashboard = () => {
 
   const recalculate = async () => {
     try {
-      await axios.post(`http://localhost:5000/api/nutrition/vitality/${teamId}/calculate`);
+      await axios.post(
+  `${API_URL}/api/nutrition/vitality/${teamId}/calculate`
+);
       fetchData();
       alert("✅ Vitality score recalculated!");
     } catch (err) {

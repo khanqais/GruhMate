@@ -2,6 +2,8 @@ import { useEffect, useState } from "react";
 import { useAuth } from "../context/AuthContext";
 import { useStock } from "../context/StockContext";
 
+
+
 export default function RecipeDrawer({ open, onClose }) {
   const { currentUser } = useAuth();
   const { stocks } = useStock();
@@ -39,7 +41,7 @@ const teamId = currentUser?.team || null;
 
     try {
       const res = await fetch(
-        "http://localhost:5000/api/recipes/generate",
+        `${import.meta.env.VITE_API_URL}/api/recipes/generate`,
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },

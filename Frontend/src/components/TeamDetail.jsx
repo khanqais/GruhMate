@@ -2,6 +2,8 @@ import React, { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 
+const API_URL = import.meta.env.VITE_API_URL;
+
 const TeamDetail = () => {
   const { teamId } = useParams();
   const navigate = useNavigate();
@@ -24,7 +26,7 @@ const TeamDetail = () => {
   const fetchTeamDetails = async () => {
     setLoading(true);
     try {
-      const res = await fetch(`http://localhost:5000/api/team/${teamId}`);
+      const res = await fetch(`${API_URL}/api/team/${teamId}`);
       const data = await res.json();
       if (res.ok) {
         setTeam(data.team);
@@ -42,7 +44,7 @@ const TeamDetail = () => {
 
   const handleAccept = async (inviteId) => {
     try {
-      const res = await fetch("http://localhost:5000/api/team/accept", {
+      const res = await fetch(`${API_URL}/api/team/accept`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ inviteId, adminId: loggedInUserId }),
@@ -58,39 +60,40 @@ const TeamDetail = () => {
       setMessage("Server error");
     }
   };
-const handleDeleteTeam = async () => {
-  if (!window.confirm(`Are you sure you want to DELETE the entire team "${team.name}"? This action cannot be undone and will remove all members.`)) {
-    return;
-  }
 
-  try {
-    const res = await fetch(`http://localhost:5000/api/team/${teamId}`, {
-      method: "DELETE",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ adminId: loggedInUserId }),
-    });
-    
-    const data = await res.json();
-    
-    if (res.ok) {
-      setMessage("Team deleted successfully");
-      
-      const updatedUser = { ...currentUser, team: null };
-      localStorage.setItem('user', JSON.stringify(updatedUser));
-      
-      setTimeout(() => navigate("/teams"), 1500);
-    } else {
-      setMessage(data.error || "Failed to delete team");
+  const handleDeleteTeam = async () => {
+    if (!window.confirm(`Are you sure you want to DELETE the entire team "${team.name}"? This action cannot be undone and will remove all members.`)) {
+      return;
     }
-  } catch (err) {
-    setMessage("Server error");
-    console.error("Delete team error:", err);
-  }
-};
+
+    try {
+      const res = await fetch(`${API_URL}/api/team/${teamId}`, {
+        method: "DELETE",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ adminId: loggedInUserId }),
+      });
+      
+      const data = await res.json();
+      
+      if (res.ok) {
+        setMessage("Team deleted successfully");
+        
+        const updatedUser = { ...currentUser, team: null };
+        localStorage.setItem('user', JSON.stringify(updatedUser));
+        
+        setTimeout(() => navigate("/teams"), 1500);
+      } else {
+        setMessage(data.error || "Failed to delete team");
+      }
+    } catch (err) {
+      setMessage("Server error");
+      console.error("Delete team error:", err);
+    }
+  };
 
   const handleReject = async (inviteId) => {
     try {
-      const res = await fetch("http://localhost:5000/api/team/reject", {
+      const res = await fetch(`${API_URL}/api/team/reject`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ inviteId, adminId: loggedInUserId }),
@@ -111,7 +114,7 @@ const handleDeleteTeam = async () => {
     if (!window.confirm("Are you sure you want to remove this member?")) return;
 
     try {
-      const res = await fetch("http://localhost:5000/api/team/remove", {
+      const res = await fetch(`${API_URL}/api/team/remove`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -136,7 +139,7 @@ const handleDeleteTeam = async () => {
     if (!window.confirm("Are you sure you want to leave this team?")) return;
 
     try {
-      const res = await fetch("http://localhost:5000/api/team/leave", {
+      const res = await fetch(`${API_URL}/api/team/leave`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ userId: loggedInUserId }),
@@ -392,7 +395,6 @@ const handleDeleteTeam = async () => {
           </div>
         </div>
 
-        {/* Back Button */}
         <button
           onClick={() => navigate("/teams")}
           className="mt-6 bg-gray-600 text-white px-6 py-3 rounded-lg hover:bg-gray-700 transition font-semibold shadow-md"

@@ -12,7 +12,7 @@ export default function Profile() {
         if (!currentUser?.team) return;
 
         const res = await axios.get(
-          `http://localhost:5000/api/team/${currentUser.team}`
+          `${import.meta.env.VITE_API_URL}/api/team/${currentUser.team}`
         );
 
         setTeamMembers(res.data.team.members);

@@ -40,7 +40,7 @@ export function TechPage() {
   return (
     <div className="category-page">
       <header className="page-header">
-        <button className="back-button" onClick={() => navigate('/')}>
+        <button className="back-button" onClick={() => navigate('/compare')}>
           ← Back to Home
         </button>
         <div className="header-content">

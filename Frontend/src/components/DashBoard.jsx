@@ -4,6 +4,7 @@ import axios from "axios";
 import { useAuth } from "../context/AuthContext";
 
 import Footer from "./Footer";
+const API_URL = import.meta.env.VITE_API_URL;
 
 const Dashboard = () => {
   const { currentUser, logout } = useAuth();
@@ -16,8 +17,7 @@ const Dashboard = () => {
   const [expiringItems, setExpiringItems] = useState([]);
   
   const [vitalityScore, setVitalityScore] = useState(null);
-const [vitalityLoading, setVitalityLoading] = useState(true);
-
+  const [vitalityLoading, setVitalityLoading] = useState(true);
 
   const teamId = currentUser?.team;
 
@@ -25,7 +25,7 @@ const [vitalityLoading, setVitalityLoading] = useState(true);
   useEffect(() => {
     if (teamId) {
       axios
-        .get(`http://localhost:5000/api/nutrition/vitality/${teamId}`)
+        .get(`${API_URL}/api/nutrition/vitality/${teamId}`)
         .then((res) => setVitalityScore(res.data.currentScore))
         .catch((err) => console.error("Failed to fetch vitality:", err));
     }
@@ -51,7 +51,7 @@ const [vitalityLoading, setVitalityLoading] = useState(true);
   try {
     setVitalityLoading(true);
     const res = await axios.get(
-      `http://localhost:5000/api/nutrition/vitality/${teamId}`,
+      `${API_URL}/api/nutrition/vitality/${teamId}`,
       {
         headers: { Authorization: `Bearer ${localStorage.getItem("token")}` }
       }
@@ -65,9 +65,11 @@ const [vitalityLoading, setVitalityLoading] = useState(true);
   }
 };
 
+
 useEffect(() => {
   fetchVitalityScore();
 }, [teamId]);
+
 
 // ✅ Refetch after stock changes
 useEffect(() => {
@@ -80,6 +82,7 @@ useEffect(() => {
     return () => clearTimeout(timer);
   }
 }, [stocks.length]); 
+
 
   // Fetch stock from backend
   const fetchStocks = async () => {
@@ -94,7 +97,7 @@ useEffect(() => {
       }
 
       const res = await axios.get(
-        `http://localhost:5000/api/stock/team/${teamId}`,
+        `${API_URL}/api/stock/team/${teamId}`,
         {
           headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
         }
@@ -108,13 +111,14 @@ useEffect(() => {
     }
   };
 
+
   // ✅ Fetch BuyList to calculate monthly savings
   const fetchBuyList = async () => {
     try {
       if (!teamId) return;
 
       const res = await axios.get(
-        `http://localhost:5000/api/stock/buylist/${teamId}`,
+        `${API_URL}/api/stock/buylist/${teamId}`,
         {
           headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
         }
@@ -125,16 +129,19 @@ useEffect(() => {
     }
   };
 
+
   useEffect(() => {
     fetchStocks();
     fetchBuyList();
   }, [refreshKey, teamId]);
+
 
   useEffect(() => {
     if (location.state?.refresh) {
       setRefreshKey((prev) => prev + 1);
     }
   }, [location.state]);
+
 
   // ✅ Check expiring items whenever stocks change
   useEffect(() => {
@@ -143,12 +150,14 @@ useEffect(() => {
     }
   }, [stocks]);
 
+
   // Status logic
   const getStatus = (quantity, requiredQuantity) => {
     if (quantity <= requiredQuantity * 0.3) return "critical";
     if (quantity <= requiredQuantity) return "low";
     return "normal";
   };
+
 
   // ✅ REAL Dashboard stats (no dummy data)
   const dashboardStats = {
@@ -160,6 +169,7 @@ useEffect(() => {
     expiringSoon: expiringItems.length,
     monthlySavings: calculateMonthlySavings(),
   };
+
 
   // ✅ Calculate monthly savings
   function calculateMonthlySavings() {
@@ -174,6 +184,7 @@ useEffect(() => {
     return Math.max(totalSavings, lowStockManaged * 100);
   }
 
+
   // ✅ Get days until expiry
   const getDaysUntilExpiry = (expiryDate) => {
     if (!expiryDate) return null;
@@ -184,16 +195,18 @@ useEffect(() => {
     return diffDays;
   };
 
+
   // ✅ Handle decrease stock
   const handleDecrease = async (id, name) => {
     try {
       const res = await axios.patch(
-        `http://localhost:5000/api/stock/${id}/decrement`,
+        `${API_URL}/api/stock/${id}/decrement`,
         { userName: currentUser?.name },
         {
           headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
         }
       );
+
 
       if (res.data.remove) {
         setStocks((prev) => prev.filter((s) => s._id !== id));
@@ -210,6 +223,7 @@ useEffect(() => {
     } catch (err) {
       console.error("Decrease error:", err);
 
+
       if (err.response?.status === 400) {
         alert(err.response?.data?.message || "Cannot decrease stock further");
       } else {
@@ -218,16 +232,18 @@ useEffect(() => {
     }
   };
 
+
   // ✅ Handle increase stock
   const handleIncrease = async (id) => {
     try {
       const res = await axios.patch(
-        `http://localhost:5000/api/stock/${id}/increment`,
+        `${API_URL}/api/stock/${id}/increment`,
         { userName: currentUser?.name },
         {
           headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
         }
       );
+
 
       const updatedStock = res.data.stock;
       setStocks((prev) =>
@@ -241,6 +257,7 @@ useEffect(() => {
     }
   };
 
+
   // ✅ Handle save expiry/consumption rate
   async function handleSave(item) {
     try {
@@ -249,8 +266,9 @@ useEffect(() => {
         return;
       }
 
+
       const res = await axios.put(
-        `http://localhost:5000/api/stock/${item._id}`,
+        `${API_URL}/api/stock/${item._id}`,
         {
           expiryDate: item.tempExpiryDate,
           consumptionRate: item.tempConsumptionRate,
@@ -264,8 +282,10 @@ useEffect(() => {
         }
       );
 
+
       // ✅ Update local state with the response data
       setStocks(stocks.map((s) => (s._id === item._id ? res.data : s)));
+
 
       alert("✅ Stock updated successfully!");
     } catch (err) {
@@ -273,6 +293,7 @@ useEffect(() => {
       alert(err.response?.data?.error || "Update failed");
     }
   }
+
 
   // ✅ Handle delete stock
   const handleDelete = async (id, name) => {
@@ -282,10 +303,12 @@ useEffect(() => {
       );
       if (!confirmDelete) return;
 
-      await axios.delete(`http://localhost:5000/api/stock/${id}`, {
+
+      await axios.delete(`${API_URL}/api/stock/${id}`, {
         headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
         data: { userName: currentUser?.name },
       });
+
 
       // Remove from state
       setStocks((prev) => prev.filter((s) => s._id !== id));
@@ -296,10 +319,12 @@ useEffect(() => {
     }
   };
 
+
   const handleLogout = () => {
     logout();
     navigate("/", { replace: true });
   };
+
 
   if (!teamId) {
     return (
@@ -322,10 +347,10 @@ useEffect(() => {
     );
   }
 
+
   return (
     <div className="min-h-screen bg-gray-50">
       {/* ✅ Navbar */}
-     
 
       {/* Main */}
       <main className="container mx-auto px-4 sm:px-6 py-8">
@@ -335,6 +360,7 @@ useEffect(() => {
             Overview of your kitchen inventory and status
           </p>
         </div>
+
 
         {/* ✅ Expiring Items Alert Banner */}
         {expiringItems.length > 0 && (
@@ -349,9 +375,7 @@ useEffect(() => {
                   {expiringItems
                     .map((item) => {
                       const days = getDaysUntilExpiry(item.expiryDate);
-                      return `${item.name} (${days} day${
-                        days !== 1 ? "s" : ""
-                      } left)`;
+                      return `${item.name} (${days} day${days !== 1 ? "s" : ""} left)`;
                     })
                     .join(", ")}
                 </p>
@@ -359,6 +383,7 @@ useEffect(() => {
             </div>
           </div>
         )}
+
 
         {/* Stats Grid */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 mb-8">
@@ -408,6 +433,7 @@ useEffect(() => {
             </div>
           ))}
         </div>
+
 
         {/* ✅ Nutrition Quick Link Card */}
         {/* Nutrition Quick Link Card */}
@@ -466,6 +492,7 @@ useEffect(() => {
 </div>
 
 
+
         {/* Stock Table */}
         <div className="bg-white rounded-xl shadow-sm border overflow-hidden">
           <div className="px-4 sm:px-6 py-4 border-b flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
@@ -477,6 +504,7 @@ useEffect(() => {
               + Add Item
             </Link>
           </div>
+
 
           <div className="overflow-x-auto">
             <table className="w-full">
@@ -505,6 +533,7 @@ useEffect(() => {
                   </th>
                 </tr>
               </thead>
+
 
               <tbody>
                 {loading ? (
@@ -541,6 +570,7 @@ useEffect(() => {
                     const isExpiring =
                       daysUntilExpiry !== null && daysUntilExpiry <= 3;
 
+
                     return (
                       <tr
                         key={item._id}
@@ -557,6 +587,7 @@ useEffect(() => {
                             </div>
                           )}
                         </td>
+
 
                         {/* Consumption Rate */}
                         <td className="py-3 px-4 sm:px-6">
@@ -585,13 +616,16 @@ useEffect(() => {
                           )}
                         </td>
 
+
                         {/* Available Quantity */}
                         <td className="py-3 px-4 sm:px-6">
                           <span className="font-bold text-gray-900">{item.quantity}</span>
                         </td>
 
+
                         {/* Unit */}
                         <td className="py-3 px-4 sm:px-6 text-gray-700">{item.unit}</td>
+
 
                         {/* Expiry */}
                         <td className="py-3 px-4 sm:px-6">
@@ -634,6 +668,7 @@ useEffect(() => {
                           )}
                         </td>
 
+
                         {/* Status */}
                         <td className="py-3 px-4 sm:px-6">
                           <span
@@ -648,6 +683,7 @@ useEffect(() => {
                             {status.toUpperCase()}
                           </span>
                         </td>
+
 
                         {/* Actions */}
                         <td className="py-3 px-4 sm:px-6">
@@ -692,13 +728,14 @@ useEffect(() => {
                             </button>
                           </div>
                         </td>
-                      </tr>
-                    );
-                  })
-                )}
+                        </tr>
+                      );
+                    })
+                  )}
               </tbody>
             </table>
           </div>
+
 
           <div className="px-4 sm:px-6 py-4 bg-gray-50 text-sm text-gray-600">
             Showing {stocks.length} {stocks.length === 1 ? "item" : "items"}
@@ -706,9 +743,11 @@ useEffect(() => {
         </div>
       </main>
 
+
       <Footer />
     </div>
   );
 };
+
 
 export default Dashboard;

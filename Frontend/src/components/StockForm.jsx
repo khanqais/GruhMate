@@ -87,7 +87,7 @@ const StockForm = () => {
       });
 
       await axios.post(
-        "http://localhost:5000/api/stock",
+        `${import.meta.env.VITE_API_URL}/api/stock`,
         {
           name: formData.name,
           quantity: Number(formData.quantity),

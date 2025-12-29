@@ -31,7 +31,8 @@ export const StockProvider = ({ children }) => {
 
     try {
       const res = await axios.get(
-        `http://localhost:5000/api/stock/team/${currentUser.teamId}`
+        `${import.meta.env.VITE_API_URL}/api/stock/team/${currentUser.teamId}`
+
       );
       setStocks(res.data);
     } catch (err) {

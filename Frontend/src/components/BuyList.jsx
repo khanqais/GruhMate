@@ -5,6 +5,8 @@ import { chef } from "../assets/images";
 import Footer from "./Footer";
 import { useAuth } from "../context/AuthContext";
 
+
+
 const BuyList = () => {
   const { currentUser } = useAuth();
   const teamId = currentUser?.team; 
@@ -14,6 +16,7 @@ const BuyList = () => {
   const [selectedFile, setSelectedFile] = useState(null);
   const [imagePreview, setImagePreview] = useState(null);
   const [detectedItems, setDetectedItems] = useState([]);
+  const API_URL = import.meta.env.VITE_API_URL;
 
   const navigate = useNavigate();
   const location = useLocation();
@@ -30,7 +33,7 @@ const BuyList = () => {
       }
 
       const res = await axios.get(
-        `http://localhost:5000/api/stock/buylist/${teamId}`,
+        `${import.meta.env.VITE_API_URL}/api/stock/buylist/${teamId}`,
         {
           headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
         }
@@ -50,7 +53,7 @@ const BuyList = () => {
       );
       if (!confirmDelete) return;
 
-      await axios.delete(`http://localhost:5000/api/stock/buylist/${id}`, {
+      await axios.delete(`${import.meta.env.VITE_API_URL}/api/stock/buylist/${id}`, {
         headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
         data: { userName: currentUser?.name }, 
       });
@@ -94,7 +97,7 @@ const BuyList = () => {
       formData.append("teamId", teamId);
 
       const res = await axios.post(
-        "http://localhost:5000/api/scan-stock",
+        `${import.meta.env.VITE_API_URL}/api/scan-stock`,
         formData,
         {
           headers: {

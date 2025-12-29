@@ -2,8 +2,10 @@ import React, { useState, useEffect } from "react";
 import { useAuth } from "../context/AuthContext";
 import { useNavigate } from "react-router-dom";
 
+const API_URL = import.meta.env.VITE_API_URL;
+
 const Teams = () => {
-  const { currentUser, login } = useAuth(); 
+  const { currentUser, login } = useAuth();
   const loggedInUserId = currentUser?._id;
   
   const [teamName, setTeamName] = useState("");
@@ -12,18 +14,18 @@ const Teams = () => {
   const [message, setMessage] = useState("");
   const [myTeam, setMyTeam] = useState(null);
   const [loading, setLoading] = useState(false);
-  const [pageLoading, setPageLoading] = useState(true); 
+  const [pageLoading, setPageLoading] = useState(true);
   const navigate = useNavigate();
 
   const refreshUserData = async () => {
     try {
-      const res = await fetch(`http://localhost:5000/api/user/${loggedInUserId}`);
+      const res = await fetch(`${API_URL}/api/user/${loggedInUserId}`);
       const userData = await res.json();
       
       if (res.ok && userData) {
-        const token = localStorage.getItem('token');
-        login(userData, token); 
-        return userData; 
+        const token = localStorage.getItem("token");
+        login(userData, token);
+        return userData;
       }
     } catch (err) {
       console.error("Error refreshing user data:", err);
@@ -38,7 +40,7 @@ const Teams = () => {
         return;
       }
 
-      const teamRes = await fetch(`http://localhost:5000/api/team/${userTeamId}`);
+      const teamRes = await fetch(`${API_URL}/api/team/${userTeamId}`);
       const teamData = await teamRes.json();
       
       if (teamRes.ok && teamData.team) {
@@ -88,7 +90,7 @@ const Teams = () => {
 
     setLoading(true);
     try {
-      const res = await fetch("http://localhost:5000/api/team/create", {
+      const res = await fetch(`${API_URL}/api/team/create`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ userId: loggedInUserId, teamName }),
@@ -122,7 +124,7 @@ const Teams = () => {
 
     setLoading(true);
     try {
-      const res = await fetch("http://localhost:5000/api/team/join", {
+      const res = await fetch(`${API_URL}/api/team/join`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ userId: loggedInUserId, teamCode }),
@@ -132,7 +134,6 @@ const Teams = () => {
       if (res.ok) {
         setMessage(data.message);
         setTeamCode("");
-        
         await refreshUserData();
       } else {
         setMessage(data.error || "Failed to join team");
@@ -154,7 +155,7 @@ const Teams = () => {
     }
 
     try {
-      const res = await fetch(`http://localhost:5000/api/team/${teamId}`, {
+      const res = await fetch(`${API_URL}/api/team/${teamId}`, {
         method: "DELETE",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ adminId: loggedInUserId }),
@@ -163,7 +164,6 @@ const Teams = () => {
       const data = await res.json();
       if (res.ok) {
         setMessage("Team deleted successfully");
-        
         await refreshUserData();
         setMyTeam(null);
       } else {
