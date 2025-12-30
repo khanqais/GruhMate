@@ -1,22 +1,25 @@
 // utils/helpers.js
 import fs from 'fs';
 import path from 'path';
-import { fileURLToPath } from 'url';
 
-// __dirname replacement for ES modules
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
-
-// Price tracking database setup
-const DB_FILE = path.join(__dirname, '..', 'price_history.json');
+// ✅ Use /tmp directory (only writable location on Vercel)
+const DB_FILE = path.join('/tmp', 'price_history.json');
 
 // Initialize database file if it doesn't exist
-if (!fs.existsSync(DB_FILE)) {
-  fs.writeFileSync(DB_FILE, JSON.stringify({ products: {} }, null, 2));
+function ensureDBExists() {
+  try {
+    if (!fs.existsSync(DB_FILE)) {
+      fs.writeFileSync(DB_FILE, JSON.stringify({ products: {} }, null, 2));
+      console.log('✅ Price database initialized at:', DB_FILE);
+    }
+  } catch (error) {
+    console.error('⚠️ Could not initialize price database:', error.message);
+  }
 }
 
 export function readPriceDB() {
   try {
+    ensureDBExists();
     const data = fs.readFileSync(DB_FILE, 'utf8');
     return JSON.parse(data);
   } catch (error) {
@@ -27,6 +30,7 @@ export function readPriceDB() {
 
 export function writePriceDB(data) {
   try {
+    ensureDBExists();
     fs.writeFileSync(DB_FILE, JSON.stringify(data, null, 2));
   } catch (error) {
     console.error('Error writing price database:', error);
@@ -64,7 +68,7 @@ export function getCacheKey(product, location) {
 export function getFromCache(key) {
   const cached = cache.get(key);
   if (cached && Date.now() - cached.timestamp < CACHE_TTL) {
-    console.log(`Cache hit for: ${key}`);
+    console.log(`✅ Cache hit for: ${key}`);
     return cached.data;
   }
   cache.delete(key);
