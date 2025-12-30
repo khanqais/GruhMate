@@ -4,7 +4,7 @@ import dotenv from "dotenv";
 import cors from "cors";
 import cron from "node-cron";
 
-// ============ ROUTES ============
+
 import authRoutes from "./routes/auth.js";
 import teamRoutes from "./routes/team.js";
 import userRoutes from "./routes/user.js";
@@ -15,16 +15,16 @@ import techRoutes from "./routes/techRoutes.js";
 import recipes from "./routes/recipes.js";
 import nutritionRoutes from "./routes/nutritionRoutes.js";
 
-// ============ SERVICES ============
+
 import { checkExpiringItems } from "./services/expiryChecker.js";
 import { calculateVitalityScore } from "./services/vitalityCalculator.js";
 import { generateRecommendations } from "./services/recommendationEngine.js";
 import { notifyTeam } from "./services/teamNotifier.js";
 
-// ============ UTILS ============
+
 import { closeBrowser } from "./utils/browserUtils.js";
 
-// ============ MODELS ============
+
 import Team from "./models/Team.js";
 import NutritionLog from "./models/NutritionLog.js";
 import VitalityScore from "./models/VitalityScore.js";
@@ -33,11 +33,10 @@ dotenv.config();
 
 const app = express();
 
-// ============ MIDDLEWARE ============
 app.use(cors());
 app.use(express.json({ limit: '10mb' }));
 
-// ============ DATABASE CONNECTION ============
+
 const connectDB = async () => {
   try {
     console.log("🔄 Connecting to MongoDB Atlas...");
@@ -64,18 +63,18 @@ const connectDB = async () => {
 await connectDB();
 
 mongoose.connection.on('connected', () => {
-  console.log('✅ Mongoose connected to MongoDB');
+  console.log(' Mongoose connected to MongoDB');
 });
 
 mongoose.connection.on('error', (err) => {
-  console.error('❌ Mongoose connection error:', err.message);
+  console.error(' Mongoose connection error:', err.message);
 });
 
 mongoose.connection.on('disconnected', () => {
-  console.log('⚠️ Mongoose disconnected from MongoDB');
+  console.log(' Mongoose disconnected from MongoDB');
 });
 
-// ============ API ROUTES ============
+
 app.use("/api/auth", authRoutes);
 app.use("/api/team", teamRoutes);
 app.use("/api/user", userRoutes);
@@ -86,34 +85,13 @@ app.use("/", techRoutes);
 app.use("/api/recipes", recipes);
 app.use("/api/nutrition", nutritionRoutes);
 
-// ============ HEALTH CHECK ============
+
 app.get("/", (req, res) => {
-  res.json({
-    message: "🏠 GruhMate API is running",
-    status: "✅ Active",
-    version: "2.0.0",
-    timestamp: new Date().toISOString(),
-    features: [
-      "📦 Stock Management",
-      "⏰ Expiry Tracking",
-      "🥗 Nutrition Analytics",
-      "💡 Smart Recommendations",
-      "📧 Automated Reports"
-    ],
-    endpoints: {
-      auth: "/api/auth",
-      stock: "/api/stock",
-      nutrition: "/api/nutrition",
-      recipes: "/api/recipes"
-    }
-  });
+  res.send("hii mom")
 });
 
-// ============ TEST/DEBUG ENDPOINTS ============
 
-/**
- * 🧪 Manual Expiry Check
- */
+
 app.get("/api/test/check-expiry", async (req, res) => {
   try {
     console.log("\n" + "=".repeat(60));
@@ -136,9 +114,7 @@ app.get("/api/test/check-expiry", async (req, res) => {
   }
 });
 
-/**
- * 🔄 Reset Expiry Notifications (for testing)
- */
+
 app.post("/api/test/reset-notifications", async (req, res) => {
   try {
     const Stock = (await import("./models/Stock.js")).default;
@@ -166,9 +142,7 @@ app.post("/api/test/reset-notifications", async (req, res) => {
   }
 });
 
-/**
- * 📊 View Nutrition Logs
- */
+
 app.get("/api/test/nutrition-logs/:teamId", async (req, res) => {
   try {
     const { teamId } = req.params;
@@ -191,9 +165,7 @@ app.get("/api/test/nutrition-logs/:teamId", async (req, res) => {
   }
 });
 
-/**
- * 🗑️ Reset Nutrition Data (for testing)
- */
+
 app.delete("/api/test/reset-nutrition/:teamId", async (req, res) => {
   try {
     const { teamId } = req.params;
@@ -213,9 +185,7 @@ app.delete("/api/test/reset-nutrition/:teamId", async (req, res) => {
   }
 });
 
-/**
- * 🔄 Force Recalculate Vitality Score
- */
+
 app.post("/api/test/recalculate/:teamId", async (req, res) => {
   try {
     const { teamId } = req.params;
@@ -233,11 +203,7 @@ app.post("/api/test/recalculate/:teamId", async (req, res) => {
   }
 });
 
-// ============ CRON JOBS ============
 
-/**
- * ⏰ DAILY EXPIRY CHECK - 9:00 AM IST
- */
 cron.schedule("0 9 * * *", async () => {
   console.log("\n" + "=".repeat(60));
   console.log("⏰ DAILY EXPIRY CHECK - 9:00 AM IST");
@@ -245,7 +211,7 @@ cron.schedule("0 9 * * *", async () => {
 
   try {
     await checkExpiringItems();
-    console.log("✅ Daily expiry check completed\n");
+    console.log(" Daily expiry check completed\n");
   } catch (err) {
     console.error("❌ Daily expiry check failed:", err);
   }
@@ -253,9 +219,6 @@ cron.schedule("0 9 * * *", async () => {
   timezone: "Asia/Kolkata"
 });
 
-/**
- * 📧 WEEKLY NUTRITION REPORT - Sunday 10:00 AM IST
- */
 cron.schedule("0 10 * * 0", async () => {
   console.log("\n" + "=".repeat(60));
   console.log("📧 WEEKLY NUTRITION REPORTS - Sunday 10:00 AM IST");
@@ -315,9 +278,6 @@ Keep tracking for better health! 💪
   timezone: "Asia/Kolkata"
 });
 
-/**
- * 🔄 DAILY NUTRITION RECALCULATION - 11:00 PM IST
- */
 cron.schedule("0 23 * * *", async () => {
   console.log("\n" + "=".repeat(60));
   console.log("🔄 DAILY NUTRITION RECALCULATION - 11:00 PM IST");
@@ -345,9 +305,7 @@ cron.schedule("0 23 * * *", async () => {
   timezone: "Asia/Kolkata"
 });
 
-// ============ ERROR HANDLING ============
 
-// 404 Handler
 app.use((req, res) => {
   res.status(404).json({
     error: "Route not found",
@@ -363,7 +321,6 @@ app.use((req, res) => {
   });
 });
 
-// Global Error Handler
 app.use((err, req, res, next) => {
   console.error("❌ Unhandled error:", err);
   
@@ -373,7 +330,6 @@ app.use((err, req, res, next) => {
   });
 });
 
-// ============ GRACEFUL SHUTDOWN ============
 process.on("SIGINT", async () => {
   console.log("\n🛑 Shutting down gracefully...");
 
@@ -408,7 +364,6 @@ process.on("unhandledRejection", (reason, promise) => {
   process.exit(1);
 });
 
-// ============ START SERVER ============
 const PORT = process.env.PORT || 5000;
 
 app.listen(PORT, () => {

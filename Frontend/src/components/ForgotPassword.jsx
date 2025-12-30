@@ -109,7 +109,7 @@ const ForgotPassword = () => {
 
     setLoading(true);
     
-    // Move to next step after brief delay
+    
     setTimeout(() => {
       setLoading(false);
       setStep(3);
@@ -182,7 +182,7 @@ const ForgotPassword = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-blue-100 flex flex-col">
-      {/* Header */}
+     
       <header className="sticky top-0 z-50 bg-white shadow-sm">
         <div className="container mx-auto px-6">
           <div className="flex items-center justify-between h-16">
@@ -195,7 +195,7 @@ const ForgotPassword = () => {
               <span className="text-xl font-bold text-gray-900">GruhMate</span>
             </Link>
 
-            {/* Navigation */}
+          
             <div className="flex items-center space-x-4">
               <Link to="/login" className="text-gray-700 hover:text-blue-600 font-medium">
                 Back to Login
@@ -205,7 +205,7 @@ const ForgotPassword = () => {
         </div>
       </header>
 
-      {/* Main Content */}
+     
       <main className="flex-1 flex items-center justify-center py-8">
         <div className="w-full max-w-md px-4">
           <div className="bg-white rounded-2xl shadow-xl p-8">

@@ -1,4 +1,4 @@
-// services/recipeAgent.js
+
 import { model } from "../utils/geminiClient.js";
 import { buildPrompt } from "../utils/promptBuilder.js";
 
@@ -7,7 +7,7 @@ export async function generateRecipeJSON(ctx) {
   const resp = await model.generateContent(prompt);
   const text = resp.response.text();
 
-  // Harden: strip non-JSON noise if any and parse
+ 
   const start = text.indexOf("{");
   const end = text.lastIndexOf("}");
   if (start === -1 || end === -1) throw new Error("INVALID_JSON_OUTPUT");

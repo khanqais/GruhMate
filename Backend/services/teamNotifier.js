@@ -22,7 +22,7 @@ export const notifyTeam = async (teamId, message) => {
           await sendWhatsApp(member.phone, message);
         } catch (err) {
           console.error(`❌ Failed to send to ${member.name}:`, err.message);
-          // Continue to next member instead of crashing
+          
         }
       } else {
         console.log(`⚠️ ${member.name} has no phone number`);

@@ -21,7 +21,7 @@ const Dashboard = () => {
 
   const teamId = currentUser?.team;
 
-  // ✅ Fetch Vitality Score
+  
   useEffect(() => {
     if (teamId) {
       axios
@@ -31,7 +31,7 @@ const Dashboard = () => {
     }
   }, [teamId]);
 
-  // ✅ Check for expiring items (expires within 3 days)
+  
   const checkExpiringItems = () => {
     const today = new Date();
     const threeDaysFromNow = new Date();
