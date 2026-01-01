@@ -1,7 +1,7 @@
-import { GoogleGenAI } from '@google/genai';
+import { GoogleGenerativeAI } from '@google/generative-ai';
 import fs from "fs";
 
-const client = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
+const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
 
 export async function scanInventory(imagePath) {
   try {
@@ -12,35 +12,37 @@ export async function scanInventory(imagePath) {
       [{ "item": "name", "quantity": 10, "unit": "kg" }]
     `;
 
-    // Using gemini-3-flash-preview (The stable 2025 free-tier choice)
-    const result = await client.models.generateContent({
-      model: "gemini-3-flash-preview", 
-      contents: [
-        {
-          role: 'user',
-          parts: [
-            { text: prompt },
-            {
-              inlineData: {
-                data: fs.readFileSync(imagePath).toString("base64"),
-                mimeType: "image/jpeg",
-              },
-            },
-          ],
-        },
-      ],
-    });
+    // Use gemini-1.5-flash (supports vision + free tier)
+    const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
 
-    // CRITICAL: New models wrap JSON in markdown blocks. We must strip them.
-    const rawText = result.text;
-    const cleanJson = rawText.replace(/```json|```/g, "").trim();
+    // Read and encode image
+    const imageData = fs.readFileSync(imagePath);
+    const base64Image = imageData.toString("base64");
+
+    // Generate content with image
+    const result = await model.generateContent([
+      prompt,
+      {
+        inlineData: {
+          data: base64Image,
+          mimeType: "image/jpeg",
+        },
+      },
+    ]);
+
+    const response = await result.response;
+    const rawText = response.text();
+
+    // Strip markdown code blocks (``````)
+    const cleanJson = rawText.replace(/``````/g, "").trim();
 
     return JSON.parse(cleanJson);
     
   } catch (error) {
     if (error.status === 429) {
-      console.error("429 ERROR: Your free quota is locked at 0. Link a billing account in AI Studio.");
+      console.error("❌ 429 ERROR: API quota exceeded. Check your billing in AI Studio.");
     }
+    console.error("❌ Scan inventory error:", error.message);
     throw error;
   }
 }
