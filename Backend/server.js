@@ -24,6 +24,10 @@ import VitalityScore from "./models/VitalityScore.js";
 import { calculateVitalityScore } from "./services/vitalityCalculator.js";
 
 dotenv.config();
+
+
+
+
 const app = express();
 
 
@@ -100,21 +104,21 @@ app.use("/api/nutrition", nutritionRoutes);
 //app.use("/api/cron", cronRoutes);
 
 
-app.get("/api/test/check-expiry", async (req, res) => {
-  try {
-    await connectDB();
-    await checkExpiringItems();
+// app.get("/api/test/check-expiry", async (req, res) => {
+//   try {
+//     await connectDB();
+//     await checkExpiringItems();
     
-    res.json({
-      success: true,
-      message: "✅ Expiry check completed",
-      timestamp: new Date().toISOString()
-    });
-  } catch (err) {
-    console.error("❌ Expiry check failed:", err);
-    res.status(500).json({ success: false, error: err.message });
-  }
-});
+//     res.json({
+//       success: true,
+//       message: "✅ Expiry check completed",
+//       timestamp: new Date().toISOString()
+//     });
+//   } catch (err) {
+//     console.error("❌ Expiry check failed:", err);
+//     res.status(500).json({ success: false, error: err.message });
+//   }
+// });
 
 app.post("/api/test/reset-notifications", async (req, res) => {
   try {
@@ -206,7 +210,7 @@ app.use((req, res) => {
 });
 
 app.use((err, req, res, next) => {
-  console.error("❌ Unhandled error:", err);
+  console.error(" Unhandled error:", err);
   
   res.status(err.status || 500).json({
     error: err.message || "Internal server error"
