@@ -13,7 +13,6 @@ import groceryRoutes from "./routes/groceryRoutes.js";
 import techRoutes from "./routes/techRoutes.js";
 import recipes from "./routes/recipes.js";
 import nutritionRoutes from "./routes/nutritionRoutes.js";
-import cronRoutes from "./routes/cron.js";
 
 
 import NutritionLog from "./models/NutritionLog.js";
