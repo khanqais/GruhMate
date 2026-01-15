@@ -20,6 +20,15 @@ Rules:
 - DO NOT use meat, chicken, fish, eggs, or dairy unless explicitly present in the pantry.
 - If protein goal cannot be met, explain limitation using pantry items only.
 - If detergent or non-food items appear, IGNORE them.
+- Any pantry item whose name looks like a placeholder, test data, code, or does not resemble a real edible ingredient
+  (examples: test1, test5, abc123, itemX, demo, sample, soap, detergent, powder, liquid, cleaner, shampoo, etc.)
+  MUST be treated as NON-FOOD and must NOT appear in ingredients, steps, buyList, or nutrition.
+  Such items should be listed in "issues" instead.
+- Any pantry item that is expired (daysLeft ≤ 0 or marked expired in "expiringSoon")
+  must be treated as NON-USABLE FOOD.
+- Expired items must NOT be included in ingredients, steps, title, or nutrition.
+- Expired items must instead be listed in "issues" with a clear warning.
+
 
 
 Schema:
@@ -29,7 +38,7 @@ Schema:
   "ingredients": [
     { "name": "string", "quantity": 0, "unit": "string", "note": "string?" }
   ],
-  "steps": ["string"], 
+  "steps": ["string"], // must have at least 1 item
   "nutritionEstimate": { "kcal": 0, "protein_g": 0, "fiber_g": 0 },
   "expiryWarnings": ["string"],
   "buyList": ["string"],
