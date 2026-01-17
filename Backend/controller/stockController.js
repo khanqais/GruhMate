@@ -82,9 +82,18 @@ export const getStockByTeam = async (req, res) => {
       return res.status(400).json({ message: "Invalid teamId" });
     }
 
-    const stock = await Stock.find({ teamId }).populate("teamId", "teamName");
+    // Add timeout handling for slow queries
+    const stock = await Stock.find({ teamId })
+      .populate("teamId", "teamName")
+      .maxTimeMS(8000); // Set max execution time to 8 seconds
+    
     res.json(stock);
   } catch (error) {
+    console.error('Error fetching stock:', error.message);
+    // Check if it's a timeout error
+    if (error.name === 'MongoServerSelectionError' || error.message.includes('buffering timed out')) {
+      return res.status(503).json({ message: "Database connection timeout. Please try again.", error: error.message });
+    }
     res.status(500).json({ message: error.message });
   }
 };

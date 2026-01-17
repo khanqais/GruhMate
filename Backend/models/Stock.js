@@ -19,5 +19,10 @@ const stockSchema = new mongoose.Schema({
   lastNotificationDate: { type: Date }
 }, { timestamps: true });
 
+// Add indexes for better query performance
+stockSchema.index({ teamId: 1 });
+stockSchema.index({ expiryDate: 1 });
+stockSchema.index({ teamId: 1, expiryDate: 1 });
+
 const Stock = mongoose.model("Stock", stockSchema);
 export default Stock;
