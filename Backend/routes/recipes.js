@@ -85,18 +85,18 @@ function buildStockMap(docs) {
 // User posts: goals, timeMinutes, equipment
 router.post("/generate", async (req, res) => {
   try {
-    const { teamId } = req.body; 
-    // // or from auth context
-    // const {teamId}=1;
-    // const teamId="dummyTeamId";
-    const teamObjectId = new mongoose.Types.ObjectId(teamId);
+    const { teamId } = req.body;
+    
+    if (!teamId) {
+      return res.status(400).json({ error: "TEAM_ID_REQUIRED", detail: "Team ID is required" });
+    }
+    
     console.log("Incoming teamId:", teamId);
-console.log("Converted ObjectId:", teamObjectId);
 
     const { goals = [], timeMinutes = 20, equipment = [], focusItems = [] } = req.body;
 
-    // const stockDocs = await Stock.find({ teamId, quantity: { $gt: 0 } }).lean();
-     const stockDocs = await Stock.find({teamId: teamObjectId, quantity: { $gt: 0 } }).lean();
+    // Fetch stocks - teamId can be string or ObjectId in DB
+    const stockDocs = await Stock.find({ teamId: teamId, quantity: { $gt: 0 } }).lean();
     const pantry = shapePantry(stockDocs);
     console.log("Pantry context:", pantry);
     console.log("StockDocs:", stockDocs);
@@ -115,7 +115,9 @@ console.log("Converted ObjectId:", teamObjectId);
 
     res.status(200).json(reconciled);
   } catch (err) {
-    res.status(400).json({ error: "RECIPE_GENERATION_FAILED", detail: String(err) });
+    console.error("Recipe generation error:", err);
+    console.error("Error details:", err.message);
+    res.status(400).json({ error: "RECIPE_GENERATION_FAILED", detail: String(err.message || err) });
   }
 }
 );
