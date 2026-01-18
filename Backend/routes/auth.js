@@ -76,7 +76,7 @@ router.post("/login", async (req, res) => {
     const { phone, password } = req.body;
      const formattedPhone = `+91${phone}`;
 
-    const user = await User.findOne({  phone: formattedPhone });
+    const user = await User.findOne({  phone: formattedPhone }).maxTimeMS(8000);
     console.log("pura user hai:")
     console.log(user);
     if (!user) {
@@ -101,6 +101,11 @@ router.post("/login", async (req, res) => {
       },
     });
   } catch (err) {
+    console.error('Login error:', err.message);
+    // Check if it's a timeout error
+    if (err.name === 'MongoServerSelectionError' || err.message.includes('buffering timed out')) {
+      return res.status(503).json({ message: "Database connection timeout. Please try again.", error: err.message });
+    }
     res.status(500).json({ message: "Server error", error: err.message });
   }
 });

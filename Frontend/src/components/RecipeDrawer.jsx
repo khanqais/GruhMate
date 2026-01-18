@@ -6,7 +6,7 @@ import { useStock } from "../context/StockContext";
 
 export default function RecipeDrawer({ open, onClose }) {
   const { currentUser } = useAuth();
-  const { stocks } = useStock();
+  const { stocks, loading: stocksLoading } = useStock();
 
  
 const teamId = currentUser?.team || null;
@@ -22,11 +22,19 @@ const teamId = currentUser?.team || null;
 
   
   useEffect(() => {
+    console.log("📦 RecipeDrawer stocks updated:", stocks);
+    console.log("📦 Stocks length:", stocks?.length);
+    console.log("📦 StocksLoading:", stocksLoading);
+    
     if (!stocks || stocks.length === 0) {
+      console.log("⚠️ No stocks available, clearing focus items");
       setFocusItems("");
       return;
     }
-    setFocusItems(stocks.map(s => s.name).join(","));
+    
+    const itemNames = stocks.map(s => s.name).join(", ");
+    console.log("✅ Auto-populating focus items:", itemNames);
+    setFocusItems(itemNames);
   }, [stocks]);
 
   async function generateRecipe() {
@@ -128,7 +136,18 @@ w
               className="w-full border rounded px-3 py-2"
               value={focusItems}
               onChange={(e) => setFocusItems(e.target.value)}
+              placeholder={stocksLoading ? "Loading stocks..." : stocks?.length > 0 ? "" : "No stocks available"}
             />
+            {stocks?.length > 0 && (
+              <p className="text-xs text-gray-500 mt-1">
+                {stocks.length} items auto-loaded from your stock
+              </p>
+            )}
+            {!stocksLoading && (!stocks || stocks.length === 0) && (
+              <p className="text-xs text-amber-600 mt-1">
+                ⚠️ No stock items found. Add items to your stock first.
+              </p>
+            )}
           </div>
 
           <button

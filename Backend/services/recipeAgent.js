@@ -33,13 +33,12 @@
 //   return JSON.parse(rawJson);
 // }
 // services/recipeAgent.js
-import { generateGemini  } from "../utils/geminiClient.js";
+import { generateGemini } from "../utils/geminiClient.js";
 import { buildPrompt } from "../utils/promptBuilder.js";
 
 export async function generateRecipeJSON(ctx) {
   const prompt = buildPrompt(ctx);
-  const resp = await generateGemini(prompt);
-  const text = resp.response.text();
+  const text = await generateGemini(prompt);
 
   // Harden: strip non-JSON noise if any and parse
   const start = text.indexOf("{");

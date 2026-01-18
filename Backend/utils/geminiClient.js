@@ -25,22 +25,20 @@
 import { GoogleGenAI } from "@google/genai";
 
 const genAI = new GoogleGenAI({
-  apiKey: process.env.GEMINI_API_KEY
+  apiKey: process.env.GEMINI_API_KEY,
 });
 
-// Do NOT call getModel()
-// The model is selected when generating
 export async function generateGemini(prompt) {
-  const response = await genAI.models.generateContent({
+  const result = await genAI.models.generateContent({
     model: "models/gemini-2.5-flash-lite",
     contents: [
       {
         role: "user",
-        parts: [{ text: prompt }]
-      }
-    ]
+        parts: [{ text: prompt }],
+      },
+    ],
   });
 
-  return response.candidates[0].content.parts[0].text;
+  return result.text;
 }
 

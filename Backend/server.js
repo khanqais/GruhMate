@@ -36,6 +36,19 @@ app.use(cors({
 }));
 app.use(express.json({ limit: '10mb' }));
 
+// Middleware to ensure DB connection
+app.use(async (req, res, next) => {
+  try {
+    if (!isConnected || mongoose.connection.readyState !== 1) {
+      await connectDB();
+    }
+    next();
+  } catch (err) {
+    console.error('DB connection middleware error:', err);
+    res.status(503).json({ error: 'Database connection failed' });
+  }
+});
+
 
 let isConnected = false;
 
@@ -49,8 +62,14 @@ const connectDB = async () => {
     const db = await mongoose.connect(
       `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASSWORD}@gruhmate.pzn4wqm.mongodb.net/GruhMate?retryWrites=true&w=majority`,
       {
-        serverSelectionTimeoutMS: 5000,
+        serverSelectionTimeoutMS: 15000,
         socketTimeoutMS: 45000,
+        connectTimeoutMS: 15000,
+        maxPoolSize: 5,
+        minPoolSize: 1,
+        family: 4, // Force IPv4 for better Vercel compatibility
+        retryWrites: true,
+        retryReads: true,
       }
     );
     
@@ -74,7 +93,10 @@ app.get("/", (req, res) => {
 
 app.get("/api/health", async (req, res) => {
   try {
-    await connectDB();
+    // Reuse existing connection if available
+    if (!isConnected) {
+      await connectDB();
+    }
     const dbStatus = mongoose.connection.readyState === 1 ? 'Connected' : 'Disconnected';
     
     res.json({

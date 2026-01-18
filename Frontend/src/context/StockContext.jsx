@@ -27,22 +27,36 @@ export const StockProvider = ({ children }) => {
   const [loading, setLoading] = useState(true);
 
   async function fetchStocks() {
-    if (!currentUser?.teamId) return;
+    console.log("🔍 StockContext: currentUser =", currentUser);
+    const teamId = currentUser?.team || currentUser?.teamId;
+    console.log("🔍 StockContext: extracted teamId =", teamId);
+    
+    if (!teamId) {
+      console.log("⚠️ No team ID found, skipping stock fetch");
+      setStocks([]);
+      setLoading(false);
+      return;
+    }
 
     try {
+      console.log("📡 Fetching stocks for team:", teamId);
       const res = await axios.get(
-        `${import.meta.env.VITE_API_URL}/api/stock/team/${currentUser.teamId}`
-
+        `${import.meta.env.VITE_API_URL}/api/stock/team/${teamId}`
       );
+      console.log("✅ Stocks fetched successfully:", res.data);
+      console.log("✅ Number of stocks:", res.data?.length);
       setStocks(res.data);
     } catch (err) {
-      console.error("Failed to fetch stocks", err);
+      console.error("❌ Failed to fetch stocks:", err);
+      console.error("❌ Error response:", err.response?.data);
+      setStocks([]);
     } finally {
       setLoading(false);
     }
   }
 
   useEffect(() => {
+    console.log("🔄 StockContext useEffect triggered, currentUser:", currentUser);
     fetchStocks();
   }, [currentUser]);
 
