@@ -32,7 +32,7 @@ const genAI = new GoogleGenAI({
 // The model is selected when generating
 export async function generateGemini(prompt) {
   const response = await genAI.models.generateContent({
-    model: "gemini-2.0-flash",
+    model: "models/gemini-2.5-flash-lite",
     contents: [
       {
         role: "user",

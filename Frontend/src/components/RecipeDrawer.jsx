@@ -56,7 +56,7 @@ const teamId = currentUser?.team || null;
       );
 
       const data = await res.json();
-
+w
       if (!res.ok) {
         throw new Error(data?.detail || "Recipe generation failed");
       }
